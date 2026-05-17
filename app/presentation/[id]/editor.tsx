@@ -5,6 +5,7 @@ import { IconDots } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HeaderSlot } from "@/components/HeaderSlot";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +48,7 @@ export default function PresentationEditor({
   const [pasteHtml, setPasteHtml] = useState("");
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
-  const dirtyRef = useRef(false);
+  const initialRef = useRef({ title: initialTitle, slides: initialSlides });
 
   useEffect(() => {
     const el = mainRef.current;
@@ -66,10 +67,12 @@ export default function PresentationEditor({
   }, []);
 
   useEffect(() => {
-    if (!dirtyRef.current) {
-      dirtyRef.current = true;
-      return;
-    }
+    const initial = initialRef.current;
+    const unchanged =
+      title === initial.title &&
+      slides.length === initial.slides.length &&
+      slides.every((s, i) => s.html === initial.slides[i]?.html);
+    if (unchanged) return;
     const t = setTimeout(() => {
       savePresentation(presentationId, {
         title,
@@ -124,17 +127,17 @@ export default function PresentationEditor({
   const currentSlide = slides[current];
 
   return (
-    <div className="flex flex-col min-h-[100svh] min-h-[100dvh] bg-[#f0f0f5] font-sans text-zinc-900 pt-[env(safe-area-inset-top)]">
-      <nav className="flex items-center justify-between h-14 shrink-0 px-4 bg-white border-b border-zinc-200">
-        <div className="flex items-center gap-2 min-w-0">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            spellCheck={false}
-            className="h-8 max-w-50 text-sm font-medium border-transparent shadow-none hover:border-input focus-visible:bg-white"
-          />
-        </div>
-      </nav>
+    <div className="relative flex flex-1 min-h-0 flex-col bg-[#f0f0f5] font-sans text-zinc-900 pt-[env(safe-area-inset-top)]">
+      <HeaderSlot>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          spellCheck={false}
+          placeholder="Untitled"
+          aria-label="Presentation title"
+          className="h-8 w-32 sm:w-50 text-sm font-medium border-transparent bg-white/80 backdrop-blur hover:border-input focus-visible:bg-white"
+        />
+      </HeaderSlot>
 
       <main
         ref={mainRef}

@@ -26,6 +26,7 @@ export default async function PresentationPage({
 
   return (
     <PresentationEditor
+      key={presentation.id}
       presentationId={presentation.id}
       initialTitle={presentation.title}
       initialSlides={presentation.slides.map((s) => ({

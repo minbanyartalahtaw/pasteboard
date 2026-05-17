@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -38,6 +39,8 @@ export async function savePresentation(
       ? [prisma.slide.createMany({ data: slides })]
       : []),
   ]);
+
+  revalidatePath("/presentation", "layout");
 
   return { ok: true };
 }
