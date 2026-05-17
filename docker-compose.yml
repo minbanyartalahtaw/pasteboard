@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: lazy_bro_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mark
+      POSTGRES_PASSWORD: supersecret
+      POSTGRES_DB: myapp
+    ports:
+      - "9999:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
