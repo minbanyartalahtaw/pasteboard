@@ -15,11 +15,11 @@ export default function PresentationLayout({
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
       <AppSideBar />
       <SidebarInset className="min-w-0 min-h-0 overflow-hidden">
-        <header className="flex h-10 shrink-0 items-center gap-1 px-2 sm:gap-2 sm:px-3">
+        <header className="flex h-10 w-full flex-row shrink-0 items-center justify-center gap-1 sm:gap-2  px-2">
           <SidebarTrigger />
           <div
             id={HEADER_SLOT_ID}
-            className="flex min-w-0 flex-1 items-center"
+            className="flex min-w-0 flex-1 items-center justify-end"
           />
         </header>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">

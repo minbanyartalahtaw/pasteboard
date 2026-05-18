@@ -1,12 +1,10 @@
 import Link from "next/link";
-import {
-  IconPresentation,
-  IconWorld,
-} from "@tabler/icons-react";
+import { IconPresentation } from "@tabler/icons-react";
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewPresentationDialog from "./NewPresentationDialog";
+import { ResponsiveThumb } from "./ResponsiveThumb";
 
 export default async function PresentationListPage() {
   const session = await getSession();
@@ -62,51 +60,33 @@ export default async function PresentationListPage() {
         <NewPresentationDialog />
         </div>
 
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {presentations.map((p) => (
             <li key={p.id}>
               <Link
                 href={`/presentation/${p.id}`}
-                className="group flex h-full flex-col rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80"
+                className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-zinc-950/50"
               >
-                <div className="mb-3 flex w-full items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 py-4 text-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-700">
-                  <div className="relative w-full max-w-[200px] aspect-video overflow-hidden bg-white">
-                    {p.slides[0]?.html ? (
-                      <iframe
-                        srcDoc={p.slides[0].html}
-                        sandbox="allow-scripts allow-same-origin"
-                        tabIndex={-1}
-                        className="border-0 pointer-events-none origin-top-left"
-                        style={{
-                          width: "1280px",
-                          height: "720px",
-                          transform: "scale(0.15625)",
-                        }}
-                        title={`${p.title} thumbnail`}
+                <ResponsiveThumb html={p.slides[0]?.html} title={p.title} />
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {p.isPublic && (
+                      <span
+                        className="inline-block size-1.5 shrink-0 rounded-full bg-emerald-500"
+                        aria-label="Public"
+                        title="Public"
                       />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <IconPresentation className="size-6" />
-                      </div>
                     )}
+                    <h2 className="line-clamp-1 text-sm font-medium tracking-tight">
+                      {p.title}
+                    </h2>
                   </div>
+                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                    {p._count.slides}{" "}
+                    {p._count.slides === 1 ? "slide" : "slides"} ·{" "}
+                    {formatRelative(p.updatedAt)}
+                  </p>
                 </div>
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="line-clamp-1 text-sm font-medium">
-                    {p.title}
-                  </h2>
-                  {p.isPublic && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      <IconWorld className="size-3" />
-                      Public
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-xs text-zinc-500">
-                  {p._count.slides}{" "}
-                  {p._count.slides === 1 ? "slide" : "slides"} · Updated{" "}
-                  {formatRelative(p.updatedAt)}
-                </p>
               </Link>
             </li>
           ))}
@@ -124,7 +104,7 @@ function EmptyShell({
   description: string;
 }) {
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-zinc-950">
+    <div className="flex flex-1 items-center justify-center  px-6 py-16 ">
       <div className="flex max-w-sm flex-col items-center text-center">
         <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
           <IconPresentation className="size-6" />

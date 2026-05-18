@@ -41,6 +41,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { savePresentation } from "./actions";
 
@@ -66,6 +74,8 @@ export default function PresentationEditor({
   const [current, setCurrent] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [pasteHtml, setPasteHtml] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editOriginal, setEditOriginal] = useState<string>("");
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
@@ -156,6 +166,35 @@ export default function PresentationEditor({
     });
     setCurrent(i + 1);
   };
+
+  const openEdit = (i: number) => {
+    const s = slides[i];
+    if (!s) return;
+    setEditOriginal(s.html);
+    setEditingId(s.id);
+    setCurrent(i);
+  };
+
+  const cancelEdit = () => {
+    if (!editingId) return;
+    setSlides((arr) =>
+      arr.map((s) => (s.id === editingId ? { ...s, html: editOriginal } : s)),
+    );
+    setEditingId(null);
+  };
+
+  const saveEdit = () => setEditingId(null);
+
+  const updateEditingHtml = (html: string) => {
+    if (!editingId) return;
+    setSlides((arr) =>
+      arr.map((s) => (s.id === editingId ? { ...s, html } : s)),
+    );
+  };
+
+  const editingSlide = editingId
+    ? slides.find((s) => s.id === editingId)
+    : undefined;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -297,6 +336,7 @@ export default function PresentationEditor({
                   index={i}
                   active={i === current}
                   onSelect={() => setCurrent(i)}
+                  onEdit={() => openEdit(i)}
                   onDuplicate={() => duplicateSlide(i)}
                   onDelete={() => deleteSlide(i)}
                 />
@@ -352,6 +392,39 @@ export default function PresentationEditor({
         </DialogContent>
       </Dialog>
 
+      <Sheet
+        open={editingId !== null}
+        onOpenChange={(open) => {
+          if (!open) cancelEdit();
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-md flex flex-col "
+        >
+          <SheetHeader>
+            <SheetTitle>Edit slide</SheetTitle>
+          </SheetHeader>
+          <Textarea
+            value={editingSlide?.html ?? ""}
+            onChange={(e) => updateEditingHtml(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") saveEdit();
+              if (e.key === "Escape") cancelEdit();
+            }}
+            className="flex-1 min-h-40 p-3 border-x-0 border-y border-zinc-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-zinc-200 font-mono text-xs text-zinc-800 resize-none"
+          />
+          <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
+            <Button variant="ghost" size="sm" onClick={cancelEdit}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={saveEdit}>
+              Done
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
       {isFullscreen && slides.length > 0 && (
         <PresentOverlay
           current={current}
@@ -370,6 +443,7 @@ type ThumbProps = {
   index: number;
   active: boolean;
   onSelect: () => void;
+  onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
 };
@@ -379,6 +453,7 @@ function Thumb({
   index,
   active,
   onSelect,
+  onEdit,
   onDuplicate,
   onDelete,
 }: ThumbProps) {
@@ -402,8 +477,8 @@ function Thumb({
       style={style}
       {...attributes}
       className={cn(
-        "flex items-center gap-1 shrink-0 border-2 rounded-sm transition-colors",
-        active ? "border-blue-500" : "border-transparent",
+        "flex items-center gap-1 shrink-0 rounded-sm transition-colors border-4",
+        active ? "border-primary" : "border-transparent",
         isDragging && "opacity-50"
       )}
     >
@@ -449,6 +524,7 @@ function Thumb({
               align="end"
               onClick={(e) => e.stopPropagation()}
             >
+              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
               <DropdownMenuItem onSelect={onDuplicate}>
                 Duplicate
               </DropdownMenuItem>

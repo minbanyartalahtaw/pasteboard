@@ -40,13 +40,13 @@ export default function AppSideBarFooter({ name, email }: AppSideBarFooterProps)
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem asChild>
+              {/* <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <IconSettings />
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator /> */}
               <DropdownMenuItem variant="destructive" asChild>
                 <button
                   type="submit"

@@ -26,6 +26,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import {
   deletePresentation,
   setPresentationPublic,
 } from "@/app/presentation/actions"
@@ -43,6 +52,7 @@ export function PresentationSidebarItem({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const href = `/presentation/${id}`
   const isActive = pathname === href || pathname.startsWith(`${href}/`)
@@ -123,7 +133,7 @@ export function PresentationSidebarItem({
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
-            onSelect={handleDelete}
+            onSelect={() => setConfirmOpen(true)}
             disabled={pending}
           >
             <IconTrash />
@@ -131,6 +141,43 @@ export function PresentationSidebarItem({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(o) => {
+          if (!pending) setConfirmOpen(o)
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete &ldquo;{title}&rdquo;?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmOpen(false)}
+              disabled={pending}
+            >
+              No
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setConfirmOpen(false)
+                handleDelete()
+              }}
+              disabled={pending}
+            >
+              Yes, delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
