@@ -1,8 +1,35 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const features = [
+    {
+      k: "Import",
+      title: "HTML + CSS parsing",
+      detail: "Bring in full pages or components with styles intact.",
+      video: "/videos/feature-import.mp4",
+      poster: "/videos/feature-import-poster.png",
+      label: "Pasteboard parses HTML and CSS into editable slide content.",
+    },
+    {
+      k: "Publish",
+      title: "Share-ready decks",
+      detail:
+        "Share a public presentation link your team or audience can open instantly.",
+      video: "/videos/feature-share.mp4",
+      poster: "/videos/feature-share-poster.png",
+      label:
+        "Pasteboard publishes presentation slides at a public link like pasteboard.design/public/cmpw.",
+    },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900">
       <header className="sticky top-0 z-10 border-b border-zinc-100 bg-white/80 backdrop-blur">
@@ -32,7 +59,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6">
-        <section className="py-24 md:py-32">
+        <section className="py-20 md:py-28">
           <p className="mb-6 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
             Paste · Slide · Share
           </p>
@@ -54,44 +81,53 @@ export default function Home() {
               See how it works →
             </a>
           </div>
+          <div className="mt-16 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
+            <video
+              aria-label="Pasteboard turns pasted HTML code into editable slides."
+              autoPlay
+              muted
+              playsInline
+              poster="/videos/landing-page-demo-poster.png"
+              preload="metadata"
+              className="aspect-[16/10] w-full bg-zinc-100 object-cover"
+            >
+              <source src="/videos/landing-page-demo.mp4" type="video/mp4" />
+            </video>
+          </div>
         </section>
 
         <section id="features" className="border-t border-zinc-100 py-20">
           <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
             What it does
           </h2>
-          <div className="mt-10 grid gap-x-12 gap-y-10 md:grid-cols-3">
-            {[
-              {
-                k: "Import",
-                title: "HTML + CSS parsing",
-                detail:
-                  "Bring in full pages or components with styles intact.",
-              },
-              {
-                k: "Map",
-                title: "Auto slide split",
-                detail:
-                  "Sections are detected for you, then fine-tune the boundaries.",
-              },
-              {
-                k: "Publish",
-                title: "Share-ready decks",
-                detail:
-                  "One public link your team or audience can open instantly.",
-              },
-            ].map((f) => (
-              <div key={f.title}>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  {f.k}
-                </span>
-                <div className="mt-2 text-base font-medium text-zinc-900">
-                  {f.title}
+          <div className="mt-10 space-y-14">
+            {features.map((f) => (
+              <article
+                key={f.title}
+                className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(220px,0.65fr)] lg:items-center"
+              >
+                <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 shadow-[0_18px_55px_rgba(24,24,27,0.08)]">
+                  <video
+                    aria-label={f.label}
+                    autoPlay
+                    muted
+                    playsInline
+                    poster={f.poster}
+                    preload="metadata"
+                    className="aspect-[16/10] w-full bg-zinc-100 object-cover"
+                  >
+                    <source src={f.video} type="video/mp4" />
+                  </video>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                  {f.detail}
-                </p>
-              </div>
+                <div>
+                  <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                    {f.title}
+                  </span>
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
+                    {f.detail}
+                  </p>
+                </div>
+              </article>
             ))}
           </div>
         </section>
@@ -103,9 +139,8 @@ export default function Home() {
           <ol className="mt-10 grid gap-10 sm:grid-cols-2 md:grid-cols-4">
             {[
               { n: "01", k: "Paste", t: "Drop raw HTML or paste an entire page." },
-              { n: "02", k: "Map", t: "Sections become slides automatically." },
-              { n: "03", k: "Refine", t: "Reorder, duplicate, or edit inline." },
-              { n: "04", k: "Share", t: "Publish to a single, public link." },
+              { n: "02", k: "Refine", t: "Reorder, duplicate, or edit inline." },
+              { n: "03", k: "Share", t: "Publish to a single, public link." },
             ].map((s) => (
               <li key={s.n} className="flex flex-col">
                 <span className="text-xs font-medium tabular-nums text-zinc-400">
@@ -126,35 +161,31 @@ export default function Home() {
           <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
             FAQ
           </h2>
-          <div className="mt-10 grid gap-x-12 gap-y-10 md:grid-cols-2">
+          <Accordion type="single" collapsible className="mt-10">
             {[
               {
                 q: "What HTML can I paste?",
                 a: "Full pages, components, or raw markup. Pasteboard preserves your layout and CSS.",
               },
               {
-                q: "Do you support custom CSS?",
-                a: "Yes — inline styles and external stylesheets both render accurately.",
-              },
-              {
-                q: "How are slides created?",
-                a: "Sections are auto-detected; refine the boundaries before publishing.",
-              },
-              {
                 q: "Can I share decks?",
                 a: "Every deck gets a public link your audience can open instantly.",
               },
+              {
+                q : "I don't know coding. Is this for me?",
+                a: "Ai can generate HTML for you. Just paste your content and let the AI do the design.",
+              }
             ].map((item) => (
-              <div key={item.q}>
-                <div className="text-base font-medium text-zinc-900">
+              <AccordionItem key={item.q} value={item.q}>
+                <AccordionTrigger className="text-base font-medium text-zinc-900 hover:no-underline">
                   {item.q}
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+                </AccordionTrigger>
+                <AccordionContent className="text-sm leading-relaxed text-zinc-600">
                   {item.a}
-                </p>
-              </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </section>
       </main>
 

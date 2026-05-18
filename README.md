@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pasteboard
 
-## Getting Started
+Pasteboard is a Next.js app for creating and managing presentations, backed by Prisma and Postgres.
 
-First, run the development server:
+## Requirements
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20+
+- Postgres database
+
+## Environment
+
+Create a `.env` file at the project root:
+
+```
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Install
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Prisma client
 
-## Learn More
+The Prisma client is generated into `lib/generated/prisma`.
 
-To learn more about Next.js, take a look at the following resources:
+```
+npx prisma generate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tip: add a `postinstall` script so deploys always generate the client.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development
 
-## Deploy on Vercel
+```
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open http://localhost:3000.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Build
+
+```
+npm run build
+```
+
+If you see a module-not-found error for `lib/generated/prisma/client`, run `npx prisma generate` and rebuild.
+
+## Scripts
+
+- `npm run dev` - start dev server
+- `npm run build` - build for production
+- `npm run start` - start production server
+- `npm run lint` - lint code
+
+## Deploy (Vercel)
+
+Make sure the Prisma client is generated during deploy:
+
+- Add `postinstall: "prisma generate"` to `package.json` scripts, or
+- Change `build` to `prisma generate && next build`
+
+Also set `DATABASE_URL` in Vercel environment variables.
