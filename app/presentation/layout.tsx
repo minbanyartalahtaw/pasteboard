@@ -12,17 +12,19 @@ export default function PresentationLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh min-h-0 overflow-hidden">
       <AppSideBar />
-      <SidebarInset>
-        <header className="flex h-10 shrink-0 items-center gap-2 px-2">
+      <SidebarInset className="min-w-0 min-h-0 overflow-hidden">
+        <header className="flex h-10 shrink-0 items-center gap-1 px-2 sm:gap-2 sm:px-3">
           <SidebarTrigger />
           <div
             id={HEADER_SLOT_ID}
-            className="flex min-w-0 flex-1 items-center "
+            className="flex min-w-0 flex-1 items-center"
           />
         </header>
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

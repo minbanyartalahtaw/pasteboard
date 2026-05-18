@@ -6,6 +6,7 @@ import { Suspense, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { register } from "./actions";
+import Image from "next/image";
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -17,9 +18,20 @@ function RegisterForm() {
     : "/login";
 
   return (
-    <div className="w-full max-w-sm bg-white rounded-lg border border-zinc-200 shadow-sm p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Create account</h1>
-      <p className="text-sm text-zinc-500 mt-1 mb-6">Start building decks.</p>
+    <div className="w-full max-w-sm bg-zinc-50 rounded-lg border border-zinc-200 shadow-sm p-6">
+             <div className="mb-8 flex items-center justify-start gap-3">
+               <Image
+                 src="/logo.png"
+                 alt="Pasteboard"
+                 width={110}
+                 height={34}
+               />
+               <span className="h-6 w-px bg-zinc-200" aria-hidden />
+               <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+                 Sign Up
+               </h1>
+             </div>
+
 
       <form action={formAction} className="flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />

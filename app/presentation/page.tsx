@@ -7,8 +7,7 @@ import {
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import { NewPresentationDialog } from "@/components/NewPresentationDialog";
+import NewPresentationDialog from "./NewPresentationDialog";
 
 export default async function PresentationListPage() {
   const session = await getSession();
@@ -18,11 +17,6 @@ export default async function PresentationListPage() {
       <EmptyShell
         title="Sign in to view your presentations"
         description="You need an account to create and manage presentations."
-        action={
-          <Button asChild>
-            <Link href="/login?next=/presentation">Sign in</Link>
-          </Button>
-        }
       />
     );
   }
@@ -34,6 +28,11 @@ export default async function PresentationListPage() {
       title: true,
       isPublic: true,
       updatedAt: true,
+      slides: {
+        select: { html: true },
+        orderBy: { order: "asc" },
+        take: 1,
+      },
       _count: { select: { slides: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -44,14 +43,7 @@ export default async function PresentationListPage() {
       <EmptyShell
         title="No presentations yet"
         description="Create your first presentation to get started."
-        action={
-          <NewPresentationDialog>
-            <Button>
-              <IconPlus />
-              New presentation
-            </Button>
-          </NewPresentationDialog>
-        }
+
       />
     );
   }
@@ -61,20 +53,14 @@ export default async function PresentationListPage() {
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Your presentations
-            </h1>
+
             <p className="text-sm text-zinc-500">
               {presentations.length}{" "}
               {presentations.length === 1 ? "presentation" : "presentations"}
             </p>
           </div>
-          <NewPresentationDialog>
-            <Button>
-              <IconPlus />
-              New
-            </Button>
-          </NewPresentationDialog>
+
+        <NewPresentationDialog />
         </div>
 
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,8 +70,27 @@ export default async function PresentationListPage() {
                 href={`/presentation/${p.id}`}
                 className="group flex h-full flex-col rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80"
               >
-                <div className="mb-3 flex aspect-video w-full items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-700">
-                  <IconPresentation className="size-8" />
+                <div className="mb-3 flex w-full items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 py-4 text-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-700">
+                  <div className="relative w-full max-w-[200px] aspect-video overflow-hidden bg-white">
+                    {p.slides[0]?.html ? (
+                      <iframe
+                        srcDoc={p.slides[0].html}
+                        sandbox="allow-scripts allow-same-origin"
+                        tabIndex={-1}
+                        className="border-0 pointer-events-none origin-top-left"
+                        style={{
+                          width: "1280px",
+                          height: "720px",
+                          transform: "scale(0.15625)",
+                        }}
+                        title={`${p.title} thumbnail`}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <IconPresentation className="size-6" />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="line-clamp-1 text-sm font-medium">
@@ -115,11 +120,9 @@ export default async function PresentationListPage() {
 function EmptyShell({
   title,
   description,
-  action,
 }: {
   title: string;
   description: string;
-  action: React.ReactNode;
 }) {
   return (
     <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-zinc-950">
@@ -129,7 +132,7 @@ function EmptyShell({
         </div>
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
         <p className="mt-1 mb-6 text-sm text-zinc-500">{description}</p>
-        {action}
+        <NewPresentationDialog />
       </div>
     </div>
   );

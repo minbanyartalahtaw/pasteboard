@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconDots } from "@tabler/icons-react";
+import { IconArrowDownRight, IconDots, IconMaximize } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HeaderSlot } from "@/components/HeaderSlot";
+import { PresentOverlay } from "@/components/PresentOverlay";
+import { useFullscreen } from "@/hooks/use-fullscreen";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +51,8 @@ export default function PresentationEditor({
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
+  const { ref: rootRef, isFullscreen, toggle: toggleFullscreen } =
+    useFullscreen<HTMLDivElement>();
 
   useEffect(() => {
     const el = mainRef.current;
@@ -65,6 +69,28 @@ export default function PresentationEditor({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target;
+      if (
+        t instanceof HTMLElement &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      if (!isFullscreen && e.key !== "f" && e.key !== "F") return;
+      if (e.key === "ArrowRight" || e.key === " ")
+        setCurrent((c) => Math.min(c + 1, slides.length - 1));
+      else if (e.key === "ArrowLeft")
+        setCurrent((c) => Math.max(c - 1, 0));
+      else if (e.key === "f" || e.key === "F") toggleFullscreen();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [slides.length, isFullscreen, toggleFullscreen]);
 
   useEffect(() => {
     const initial = initialRef.current;
@@ -127,24 +153,50 @@ export default function PresentationEditor({
   const currentSlide = slides[current];
 
   return (
-    <div className="relative flex flex-1 min-h-0 flex-col bg-[#f0f0f5] font-sans text-zinc-900 pt-[env(safe-area-inset-top)]">
+    <div
+      ref={rootRef}
+      className={cn(
+        "relative flex flex-1 min-h-0 flex-col font-sans pt-[env(safe-area-inset-top)]",
+        isFullscreen ? "bg-black text-white" : "bg-[#f0f0f5] text-zinc-900"
+      )}
+    >
       <HeaderSlot>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          spellCheck={false}
-          placeholder="Untitled"
-          aria-label="Presentation title"
-          className="h-8 w-32 sm:w-50 text-sm font-medium border-transparent bg-white/80 backdrop-blur hover:border-input focus-visible:bg-white"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            spellCheck={false}
+            placeholder="Untitled"
+            aria-label="Presentation title"
+            className="h-8 w-32 sm:w-50 text-sm font-medium border-transparent bg-white/80 backdrop-blur hover:border-input focus-visible:bg-white"
+          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleFullscreen}
+            aria-label="Present (fullscreen)"
+            title="Present (F)"
+          >
+            <IconMaximize />
+          </Button>
+        </div>
+        
       </HeaderSlot>
 
       <main
         ref={mainRef}
-        className="flex-1 min-h-0 flex items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8"
+        className={cn(
+          "flex-1 min-h-0 flex items-center justify-center",
+          isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8"
+        )}
       >
         <div
-          className="bg-white rounded-md border border-zinc-200 shadow-sm overflow-hidden"
+          className={cn(
+            "overflow-hidden",
+            isFullscreen
+              ? "bg-black"
+              : "bg-white rounded-md border border-zinc-200 shadow-sm"
+          )}
           style={{ width: frame.w, height: frame.h }}
         >
           {currentSlide ? (
@@ -167,24 +219,29 @@ export default function PresentationEditor({
               />
             </div>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-3">
-              <p className="text-sm">No slides yet</p>
-              <Button variant="link" size="sm" onClick={openAddModal}>
-                Add your first slide
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="w-full h-full flex items-center justify-center gap-2 text-sm text-zinc-400 hover:text-zinc-600 transition-colors"
+            >
+              <span>Add your first slide</span>
+              <IconArrowDownRight className="size-4" />
+            </button>
           )}
         </div>
       </main>
 
       <footer
-        className="shrink-0 bg-white border-t border-zinc-200 px-4 pt-3 flex items-center gap-3"
+        className={cn(
+          "shrink-0 bg-white border-t border-zinc-200 px-4 pt-3 flex items-center gap-3",
+          isFullscreen && "hidden"
+        )}
         style={{
           paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
         }}
       >
         <div
-          className="flex-1 min-w-0 flex items-center gap-3 overflow-x-auto pb-1"
+          className="flex-1 min-w-0 flex items-center gap-3 overflow-x-auto  [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           onWheel={(e) => {
             if (e.deltaY === 0) return;
             e.currentTarget.scrollBy({ left: e.deltaY });
@@ -253,6 +310,16 @@ export default function PresentationEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isFullscreen && slides.length > 0 && (
+        <PresentOverlay
+          current={current}
+          total={slides.length}
+          onPrev={() => setCurrent((c) => Math.max(c - 1, 0))}
+          onNext={() => setCurrent((c) => Math.min(c + 1, slides.length - 1))}
+          onExit={toggleFullscreen}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { IconHome, IconPlus } from "@tabler/icons-react"
+import { IconLayoutDashboard } from "@tabler/icons-react"
 
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -16,11 +16,19 @@ import {
 } from "@/components/ui/sidebar"
 import { SideBarNavLink } from "@/components/AppSideBarNav"
 import { PresentationSidebarItem } from "@/components/AppSideBarPresentationItem"
-import { NewPresentationDialog } from "@/components/NewPresentationDialog"
+import AppSideBarFooter from "@/components/AppSideBarFooter"
 import Image from "next/image"
+import Link from "next/link"
 
 export async function AppSideBar() {
   const session = await getSession()
+
+  const user = session
+    ? await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { name: true, email: true },
+      })
+    : null
 
   const presentations = session
     ? await prisma.presentation.findMany({
@@ -35,6 +43,7 @@ export async function AppSideBar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
+            
             <SidebarMenuButton asChild size="lg" tooltip="Pasteboard">
 {/*               <Link href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
@@ -47,40 +56,40 @@ export async function AppSideBar() {
                   </span>
                 </div>
               </Link> */}
+              <Link href="/">
               <Image
                 src="/logo.png"
                 alt="Pasteboard"
-                width={100}
+                width={200}
                 height={100}
                 loading="eager"
               />
+              </Link>
             </SidebarMenuButton>
+            
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
+
             <SidebarMenu>
               <SidebarMenuItem>
                 <SideBarNavLink href="/presentation" title="Home" exact>
-                  <IconHome />
-                  <span>Home</span>
+                  <IconLayoutDashboard />
+                  <span>Dashboard</span>
                 </SideBarNavLink>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+{/*               <SidebarMenuItem>
                 <NewPresentationDialog>
                   <SidebarMenuButton tooltip="New presentation">
                     <IconPlus />
                     <span>New Presentation</span>
                   </SidebarMenuButton>
                 </NewPresentationDialog>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+
 
         <SidebarGroup>
           <SidebarGroupLabel>Presentations</SidebarGroupLabel>
@@ -109,6 +118,8 @@ export async function AppSideBar() {
       </SidebarContent>
 
       <SidebarRail />
+
+      <AppSideBarFooter name={user?.name ?? null} email={user?.email ?? null} />
     </Sidebar>
   )
 }
