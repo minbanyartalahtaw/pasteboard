@@ -18,12 +18,14 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-sm rounded-xl border border-zinc-100 bg-white p-8 shadow-sm">
       <div className="mb-8 flex items-center justify-start gap-3">
+        <Link href="/" >
         <Image
           src="/logo.png"
           alt="Pasteboard"
           width={110}
           height={34}
         />
+        </Link>
         <span className="h-6 w-px bg-zinc-200" aria-hidden />
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
           Sign in

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
+import { hashPassword } from "@/lib/password";
 
 export type RegisterState = { error?: string } | null;
 
@@ -35,7 +36,7 @@ export async function register(
   }
 
   const user = await prisma.user.create({
-    data: { email, name, passwordHash: password },
+    data: { email, name, passwordHash: await hashPassword(password) },
   });
 
   const token = await signToken({ userId: user.id });

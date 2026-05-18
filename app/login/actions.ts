@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
+import { verifyPassword } from "@/lib/password";
 
 export type LoginState = { error?: string } | null;
 
@@ -26,7 +27,7 @@ export async function login(
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || user.passwordHash !== password) {
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return { error: "Invalid email or password." };
   }
 
