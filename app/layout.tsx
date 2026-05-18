@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pasteboard",
   description: "Paste HTML, build slides, share publicly.",
-  icons: "/logo.png",
+  icons: "/favicon.ico",
 };
 
 export default function RootLayout({
