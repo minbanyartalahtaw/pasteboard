@@ -2,6 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IconArrowDownRight, IconDots, IconMaximize } from "@tabler/icons-react";
+import {
+  DndContext,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,15 +157,29 @@ export default function PresentationEditor({
     setCurrent(i + 1);
   };
 
-  const moveSlide = (i: number, dir: -1 | 1) => {
-    const j = i + dir;
-    if (j < 0 || j >= slides.length) return;
-    setSlides((s) => {
-      const next = [...s];
-      [next[i], next[j]] = [next[j], next[i]];
-      return next;
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = slides.findIndex((s) => s.id === active.id);
+    const newIdx = slides.findIndex((s) => s.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    setSlides((s) => arrayMove(s, oldIdx, newIdx));
+    setCurrent((c) => {
+      if (c === oldIdx) return newIdx;
+      if (oldIdx < c && newIdx >= c) return c - 1;
+      if (oldIdx > c && newIdx <= c) return c + 1;
+      return c;
     });
-    setCurrent(j);
   };
 
   const currentSlide = slides[current];
@@ -240,29 +272,38 @@ export default function PresentationEditor({
           paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
         }}
       >
-        <div
-          className="flex-1 min-w-0 flex items-center gap-3 overflow-x-auto  [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          onWheel={(e) => {
-            if (e.deltaY === 0) return;
-            e.currentTarget.scrollBy({ left: e.deltaY });
-          }}
+        <DndContext
+          id="slide-thumb-strip"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          autoScroll={{ threshold: { x: 0.2, y: 0 } }}
         >
-          {slides.map((s, i) => (
-            <Thumb
-              key={s.id}
-              slide={s}
-              index={i}
-              active={i === current}
-              onSelect={() => setCurrent(i)}
-              onDuplicate={() => duplicateSlide(i)}
-              onMoveLeft={() => moveSlide(i, -1)}
-              onMoveRight={() => moveSlide(i, 1)}
-              onDelete={() => deleteSlide(i)}
-              canLeft={i > 0}
-              canRight={i < slides.length - 1}
-            />
-          ))}
-        </div>
+          <SortableContext
+            items={slides.map((s) => s.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div
+              className="flex-1 min-w-0 flex items-center gap-3 overflow-x-auto  [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              onWheel={(e) => {
+                if (e.deltaY === 0) return;
+                e.currentTarget.scrollBy({ left: e.deltaY });
+              }}
+            >
+              {slides.map((s, i) => (
+                <Thumb
+                  key={s.id}
+                  slide={s}
+                  index={i}
+                  active={i === current}
+                  onSelect={() => setCurrent(i)}
+                  onDuplicate={() => duplicateSlide(i)}
+                  onDelete={() => deleteSlide(i)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
         <div className="flex shrink-0">
           <Button
             type="button"
@@ -330,11 +371,7 @@ type ThumbProps = {
   active: boolean;
   onSelect: () => void;
   onDuplicate: () => void;
-  onMoveLeft: () => void;
-  onMoveRight: () => void;
   onDelete: () => void;
-  canLeft: boolean;
-  canRight: boolean;
 };
 
 function Thumb({
@@ -343,22 +380,37 @@ function Thumb({
   active,
   onSelect,
   onDuplicate,
-  onMoveLeft,
-  onMoveRight,
   onDelete,
-  canLeft,
-  canRight,
 }: ThumbProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: slide.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   return (
     <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
       className={cn(
         "flex items-center gap-1 shrink-0 border-2 rounded-sm transition-colors",
-        active ? "border-blue-500" : "border-transparent"
+        active ? "border-blue-500" : "border-transparent",
+        isDragging && "opacity-50"
       )}
     >
       <span
+        {...listeners}
         className={cn(
-          "text-[11px] tabular-nums font-medium w-4 text-right transition-colors",
+          "text-[11px] tabular-nums font-medium w-4 text-right transition-colors cursor-grab active:cursor-grabbing select-none",
           active ? "text-blue-500" : "text-zinc-400"
         )}
       >
@@ -367,6 +419,7 @@ function Thumb({
 
       <div
         onClick={onSelect}
+        {...listeners}
         className={cn(
           "relative group shrink-0 p-[5px] cursor-pointer transition-colors"
         )}
@@ -398,12 +451,6 @@ function Thumb({
             >
               <DropdownMenuItem onSelect={onDuplicate}>
                 Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onMoveLeft} disabled={!canLeft}>
-                Move left
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onMoveRight} disabled={!canRight}>
-                Move right
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={onDelete}>

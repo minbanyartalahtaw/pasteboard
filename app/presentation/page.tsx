@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  IconPlus,
   IconPresentation,
   IconWorld,
 } from "@tabler/icons-react";
