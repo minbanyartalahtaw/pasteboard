@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   IconChevronLeft,
@@ -68,11 +70,23 @@ export default function PublicViewer({
     >
       {!isFullscreen && (
         <header className="flex items-center justify-between h-12 shrink-0 px-4 bg-white border-b border-zinc-200">
-          <h1 className="text-sm font-medium truncate">{title}</h1>
+          
+                    <Link
+            href="/"
+            aria-label="Go to Pasteboard home"
+            className="inline-flex w-fit items-center"
+          >
+            <Image
+              src="/logo.png"
+              alt="Pasteboard"
+              width={96}
+              height={30}
+              className="h-5 w-auto"
+            />
+          </Link>
+          
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-500 tabular-nums">
-              {slides.length === 0 ? 0 : current + 1} / {slides.length}
-            </span>
+
             <Button
               variant="ghost"
               size="icon-sm"
@@ -129,31 +143,41 @@ export default function PublicViewer({
         </div>
       </main>
 
-      {!isFullscreen && slides.length > 1 && (
+      {!isFullscreen && (
         <footer
-          className="shrink-0 bg-white border-t border-zinc-200 px-4 py-3 flex items-center justify-center gap-3"
+          className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 bg-white px-4 py-3"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrent((c) => Math.max(c - 1, 0))}
-            disabled={current === 0}
-            aria-label="Previous slide"
-          >
-            <IconChevronLeft />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              setCurrent((c) => Math.min(c + 1, slides.length - 1))
-            }
-            disabled={current >= slides.length - 1}
-            aria-label="Next slide"
-          >
-            <IconChevronRight />
-          </Button>
+<h1 className="text-sm font-medium truncate">{title}</h1>
+          {slides.length > 1 ? (
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrent((c) => Math.max(c - 1, 0))}
+                disabled={current === 0}
+                aria-label="Previous slide"
+              >
+                <IconChevronLeft />
+              </Button>
+                          <span className="text-xs text-zinc-500 tabular-nums">
+              {slides.length === 0 ? 0 : current + 1} / {slides.length}
+            </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setCurrent((c) => Math.min(c + 1, slides.length - 1))
+                }
+                disabled={current >= slides.length - 1}
+                aria-label="Next slide"
+              >
+                <IconChevronRight />
+              </Button>
+            </div>
+          ) : (
+            <div />
+          )}
         </footer>
       )}
 

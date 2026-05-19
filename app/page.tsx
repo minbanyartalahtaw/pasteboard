@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { WorkflowSwitcher } from "@/components/WorkflowSwitcher";
 
 export default function Home() {
   const features = [
@@ -20,7 +21,7 @@ export default function Home() {
     },
     {
       k: "Publish",
-      title: "Share-ready decks",
+      title: "Share-ready presentations",
       detail:
         "Share a public presentation link your team or audience can open instantly.",
       video: "/videos/feature-share.mp4",
@@ -42,11 +43,17 @@ export default function Home() {
             loading="eager"
           />
           <nav className="hidden items-center gap-8 text-sm text-zinc-600 md:flex">
-            <a className="transition-colors hover:text-zinc-900" href="#features">
-              Features
-            </a>
-            <a className="transition-colors hover:text-zinc-900" href="#workflow">
+            <a
+              className="transition-colors hover:text-zinc-900"
+              href="#workflow"
+            >
               Workflow
+            </a>
+            <a
+              className="transition-colors hover:text-zinc-900"
+              href="#features"
+            >
+              Features
             </a>
             <a className="transition-colors hover:text-zinc-900" href="#faq">
               FAQ
@@ -81,19 +88,14 @@ export default function Home() {
               See how it works →
             </a>
           </div>
-          <div className="mt-16 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
-            <video
-              aria-label="Pasteboard turns pasted HTML code into editable slides."
-              autoPlay
-              muted
-              playsInline
-              poster="/videos/landing-page-demo-poster.png"
-              preload="metadata"
-              className="aspect-[16/10] w-full bg-zinc-100 object-cover"
-            >
-              <source src="/videos/landing-page-demo.mp4" type="video/mp4" />
-            </video>
-          </div>
+          <section id="workflow" className="border-t border-zinc-100 py-20">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
+              Work Flow
+            </h2>
+            <div className="mt-10">
+              <WorkflowSwitcher />
+            </div>
+          </section>
         </section>
 
         <section id="features" className="border-t border-zinc-100 py-20">
@@ -132,31 +134,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="workflow" className="border-t border-zinc-100 py-20">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
-            How it works
-          </h2>
-          <ol className="mt-10 grid gap-10 sm:grid-cols-2 md:grid-cols-4">
-            {[
-              { n: "01", k: "Paste", t: "Drop raw HTML or paste an entire page." },
-              { n: "02", k: "Refine", t: "Reorder, duplicate, or edit inline." },
-              { n: "03", k: "Share", t: "Publish to a single, public link." },
-            ].map((s) => (
-              <li key={s.n} className="flex flex-col">
-                <span className="text-xs font-medium tabular-nums text-zinc-400">
-                  {s.n}
-                </span>
-                <span className="mt-3 text-base font-semibold text-primary">
-                  {s.k}
-                </span>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                  {s.t}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
         <section id="faq" className="border-t border-zinc-100 py-20">
           <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
             FAQ
@@ -170,6 +147,10 @@ export default function Home() {
               {
                 q: "Can I share decks?",
                 a: "Every deck gets a public link your audience can open instantly.",
+              },
+              {
+                q: "What is a deck ?",
+                a: "An HTML slide deck is a presentation created using web technologies (HTML, CSS, and JavaScript) instead of traditional software like PowerPoint or Google Slides. It runs directly in a web browser and offers highly customizable, responsive, and interactive layouts."
               },
               {
                 q : "I don't know coding. Is this for me?",
