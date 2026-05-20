@@ -43,10 +43,12 @@ export function PresentationSidebarItem({
   id,
   title,
   isPublic,
+  thumbnailUrl,
 }: {
   id: string
   title: string
   isPublic: boolean
+  thumbnailUrl: string | null
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -149,12 +151,23 @@ export function PresentationSidebarItem({
         }}
       >
         <DialogContent className="sm:max-w-sm">
+
           <DialogHeader>
             <DialogTitle>Delete &ldquo;{title}&rdquo;?</DialogTitle>
             <DialogDescription>
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+                    {thumbnailUrl && (
+            <div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/thumbnail?url=${encodeURIComponent(thumbnailUrl)}`}
+                alt={title}
+                className="w-full aspect-video object-cover"
+              />
+            </div>
+          )}
           <DialogFooter>
             <Button
               variant="ghost"
@@ -173,7 +186,7 @@ export function PresentationSidebarItem({
               }}
               disabled={pending}
             >
-              Yes, delete
+              Yes
             </Button>
           </DialogFooter>
         </DialogContent>

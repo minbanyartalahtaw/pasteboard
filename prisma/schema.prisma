@@ -41,6 +41,7 @@ model Slide {
   presentationId String
   presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
   html           String       @db.Text   // slides can be many KB
+  thumbnailUrl   String?
   order          Int
   createdAt      DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

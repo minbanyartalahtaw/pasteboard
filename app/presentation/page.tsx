@@ -4,7 +4,6 @@ import { IconPresentation } from "@tabler/icons-react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewPresentationDialog from "./NewPresentationDialog";
-import { ResponsiveThumb } from "./ResponsiveThumb";
 
 export default async function PresentationListPage() {
   const session = await getSession();
@@ -26,7 +25,7 @@ export default async function PresentationListPage() {
       isPublic: true,
       updatedAt: true,
       slides: {
-        select: { html: true },
+        select: { thumbnailUrl: true },
         orderBy: { order: "asc" },
         take: 1,
       },
@@ -67,7 +66,20 @@ export default async function PresentationListPage() {
                 href={`/presentation/${p.id}`}
                 className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-zinc-950/50"
               >
-                <ResponsiveThumb html={p.slides[0]?.html} title={p.title} />
+                <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                  {p.slides[0]?.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/thumbnail?url=${encodeURIComponent(p.slides[0].thumbnailUrl)}`}
+                      alt={p.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-zinc-400 dark:text-zinc-600">
+                      <IconPresentation className="size-8" />
+                    </div>
+                  )}
+                </div>
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {p.isPublic && (

@@ -33,7 +33,16 @@ export async function AppSideBar() {
   const presentations = session
     ? await prisma.presentation.findMany({
         where: { userId: session.userId },
-        select: { id: true, title: true, isPublic: true },
+        select: {
+          id: true,
+          title: true,
+          isPublic: true,
+          slides: {
+            select: { thumbnailUrl: true },
+            orderBy: { order: "asc" },
+            take: 1,
+          },
+        },
         orderBy: { updatedAt: "desc" },
       })
     : []
@@ -108,6 +117,7 @@ export async function AppSideBar() {
                       id={p.id}
                       title={p.title}
                       isPublic={p.isPublic}
+                      thumbnailUrl={p.slides[0]?.thumbnailUrl ?? null}
                     />
                   </SidebarMenuItem>
                 ))

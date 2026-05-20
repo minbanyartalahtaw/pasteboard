@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowDownRight, IconDots, IconMaximize } from "@tabler/icons-react";
+import { IconArrowDownRight, IconDots, IconLoader2, IconMaximize } from "@tabler/icons-react";
 import {
   DndContext,
   MouseSensor,
@@ -44,15 +44,14 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { savePresentation } from "./actions";
+import { savePresentation, generateSlideThumbnail } from "./actions";
 
-type Slide = { id: string; html: string };
+type Slide = { id: string; html: string; thumbnailUrl: string | null };
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -71,6 +70,7 @@ export default function PresentationEditor({
 }: Props) {
   const [title, setTitle] = useState(initialTitle);
   const [slides, setSlides] = useState<Slide[]>(initialSlides);
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [pasteHtml, setPasteHtml] = useState("");
@@ -121,34 +121,64 @@ export default function PresentationEditor({
   }, [slides.length, isFullscreen, toggleFullscreen]);
 
   useEffect(() => {
+    if (generatingIds.size > 0) return;
     const initial = initialRef.current;
     const unchanged =
       title === initial.title &&
       slides.length === initial.slides.length &&
-      slides.every((s, i) => s.html === initial.slides[i]?.html);
+      slides.every(
+        (s, i) =>
+          s.html === initial.slides[i]?.html &&
+          s.thumbnailUrl === initial.slides[i]?.thumbnailUrl
+      );
     if (unchanged) return;
     const t = setTimeout(() => {
       savePresentation(presentationId, {
         title,
-        slides: slides.map((s) => ({ html: s.html })),
+        slides: slides.map((s) => ({ html: s.html, thumbnailUrl: s.thumbnailUrl })),
       }).catch((err) => console.error("save failed", err));
     }, 1000);
     return () => clearTimeout(t);
-  }, [title, slides, presentationId]);
+  }, [title, slides, presentationId, generatingIds]);
 
   const openAddModal = () => {
     setPasteHtml("");
     setShowModal(true);
   };
 
+  const generateThumbnail = async (
+    slideId: string,
+    html: string,
+    oldUrl?: string | null
+  ) => {
+    setGeneratingIds((prev) => new Set([...prev, slideId]));
+    try {
+      const url = await generateSlideThumbnail(presentationId, html, oldUrl);
+      if (url) {
+        setSlides((prev) =>
+          prev.map((s) => (s.id === slideId ? { ...s, thumbnailUrl: url } : s))
+        );
+      }
+    } catch {
+      // thumbnail generation is best-effort
+    } finally {
+      setGeneratingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(slideId);
+        return next;
+      });
+    }
+  };
+
   const confirmAdd = () => {
     const html = pasteHtml.trim();
     if (!html) return;
-    const newSlide = { id: uid(), html };
+    const newSlide = { id: uid(), html, thumbnailUrl: null };
     setSlides((s) => [...s, newSlide]);
     setCurrent(slides.length);
     setShowModal(false);
     setPasteHtml("");
+    generateThumbnail(newSlide.id, html);
   };
 
   const deleteSlide = (i: number) => {
@@ -160,11 +190,10 @@ export default function PresentationEditor({
   };
 
   const duplicateSlide = (i: number) => {
-    setSlides((s) => {
-      const copy = { id: uid(), html: s[i].html };
-      return [...s.slice(0, i + 1), copy, ...s.slice(i + 1)];
-    });
+    const copy = { id: uid(), html: slides[i].html, thumbnailUrl: null };
+    setSlides((s) => [...s.slice(0, i + 1), copy, ...s.slice(i + 1)]);
     setCurrent(i + 1);
+    generateThumbnail(copy.id, copy.html);
   };
 
   const openEdit = (i: number) => {
@@ -183,7 +212,11 @@ export default function PresentationEditor({
     setEditingId(null);
   };
 
-  const saveEdit = () => setEditingId(null);
+  const saveEdit = () => {
+    const slide = slides.find((s) => s.id === editingId);
+    if (slide) generateThumbnail(slide.id, slide.html, slide.thumbnailUrl);
+    setEditingId(null);
+  };
 
   const updateEditingHtml = (html: string) => {
     if (!editingId) return;
@@ -335,6 +368,7 @@ export default function PresentationEditor({
                   slide={s}
                   index={i}
                   active={i === current}
+                  isGenerating={generatingIds.has(s.id)}
                   onSelect={() => setCurrent(i)}
                   onEdit={() => openEdit(i)}
                   onDuplicate={() => duplicateSlide(i)}
@@ -442,6 +476,7 @@ type ThumbProps = {
   slide: Slide;
   index: number;
   active: boolean;
+  isGenerating: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDuplicate: () => void;
@@ -452,6 +487,7 @@ function Thumb({
   slide,
   index,
   active,
+  isGenerating,
   onSelect,
   onEdit,
   onDuplicate,
@@ -500,18 +536,20 @@ function Thumb({
         )}
       >
         <div className="relative w-[128px] h-[72px] overflow-hidden bg-white">
-          <iframe
-            srcDoc={slide.html}
-            sandbox="allow-scripts allow-same-origin"
-            tabIndex={-1}
-            className="border-0 pointer-events-none origin-top-left"
-            style={{
-              width: "1280px",
-              height: "720px",
-              transform: "scale(0.1)",
-            }}
-            title={`Thumbnail ${index + 1}`}
-          />
+          {isGenerating ? (
+            <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
+              <IconLoader2 className="size-4 text-zinc-400 animate-spin" />
+            </div>
+          ) : slide.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/thumbnail?url=${encodeURIComponent(slide.thumbnailUrl)}`}
+              alt={`Slide ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-zinc-100" />
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger
               onClick={(e) => e.stopPropagation()}

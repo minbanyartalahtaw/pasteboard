@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PresentationEditor from "./editor";
 
+export const maxDuration = 60;
+
 export default async function PresentationPage({
   params,
 }: {
@@ -32,6 +34,7 @@ export default async function PresentationPage({
       initialSlides={presentation.slides.map((s) => ({
         id: s.id,
         html: s.html,
+        thumbnailUrl: s.thumbnailUrl ?? null,
       }))}
     />
   );
