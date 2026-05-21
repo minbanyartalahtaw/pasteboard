@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { WorkflowSwitcher } from "@/components/WorkflowSwitcher";
+import { MobileNav } from "@/components/MobileNav";
 
 export default function Home() {
   const features = [
@@ -58,10 +59,16 @@ export default function Home() {
             <a className="transition-colors hover:text-zinc-900" href="#faq">
               FAQ
             </a>
+            <a className="font-medium text-primary transition-colors hover:text-primary/80" href="/playground">
+              Playground
+            </a>
           </nav>
-          <Link href="/login">
-            <Button>Get started</Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <MobileNav />
+            <Link href="/login">
+              <Button>Get started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
