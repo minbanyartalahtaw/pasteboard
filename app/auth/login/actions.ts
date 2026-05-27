@@ -20,7 +20,7 @@ export async function login(
   const next =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//")
       ? nextRaw
-      : "/presentation/new";
+      : "/user/presentation";
 
   if (!email || !password) {
     return { error: "Email and password are required." };

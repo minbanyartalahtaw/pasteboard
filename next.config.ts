@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     ],
   },
   outputFileTracingIncludes: {
-    "/presentation/**": ["./node_modules/@sparticuz/chromium/bin/**"],
+    "/user/presentation/**": ["./node_modules/@sparticuz/chromium/bin/**"],
   },
 };
 

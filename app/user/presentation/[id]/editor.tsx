@@ -265,7 +265,7 @@ export default function PresentationEditor({
       )}
     >
       <HeaderSlot>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -284,7 +284,6 @@ export default function PresentationEditor({
             <IconMaximize />
           </Button>
         </div>
-        
       </HeaderSlot>
 
       <main
@@ -554,7 +553,10 @@ function Thumb({
             <DropdownMenuTrigger
               onClick={(e) => e.stopPropagation()}
               title="Slide options"
-              className="absolute top-1 right-1 size-5 rounded-md bg-white/90 backdrop-blur-sm text-zinc-700 hover:bg-white hover:text-zinc-900 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-opacity outline-none"
+              className={cn(
+                "absolute top-1 right-1 size-5 rounded-md bg-white/90 backdrop-blur-sm text-zinc-700 hover:bg-white hover:text-zinc-900 shadow-sm flex items-center justify-center transition-opacity outline-none data-[state=open]:opacity-100",
+                active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              )}
             >
               <IconDots className="size-3" />
             </DropdownMenuTrigger>

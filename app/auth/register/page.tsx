@@ -14,8 +14,8 @@ function RegisterForm() {
   const [state, formAction, pending] = useActionState(register, null);
 
   const loginHref = next
-    ? `/login?next=${encodeURIComponent(next)}`
-    : "/login";
+    ? `/auth/login?next=${encodeURIComponent(next)}`
+    : "/auth/login";
 
   return (
     <div className="w-full max-w-sm bg-zinc-50 rounded-lg border border-zinc-200 shadow-sm p-6">

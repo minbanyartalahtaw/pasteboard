@@ -40,7 +40,7 @@ export function MobileNav() {
             </a>
           ))}
           <div className="px-6 pt-4">
-            <Link href="/login" onClick={() => setOpen(false)}>
+            <Link href="/auth/login" onClick={() => setOpen(false)}>
               <Button className="w-full">Get started</Button>
             </Link>
           </div>

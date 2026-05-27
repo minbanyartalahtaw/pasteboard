@@ -84,7 +84,7 @@ export async function AppSideBar() {
 
             <SidebarMenu>
               <SidebarMenuItem>
-                <SideBarNavLink href="/presentation" title="Home" exact>
+                <SideBarNavLink href="/user/presentation" title="Home" exact>
                   <IconLayoutDashboard />
                   <span>Dashboard</span>
                 </SideBarNavLink>

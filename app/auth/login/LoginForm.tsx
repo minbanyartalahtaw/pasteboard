@@ -13,7 +13,7 @@ export default function LoginForm() {
   const next = searchParams.get("next") ?? "";
   const [state, formAction, pending] = useActionState(login, null);
 
-  const registerHref = next ? `/register?next=${encodeURIComponent(next)}` : "/register";
+  const registerHref = next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register";
 
   return (
     <div className="w-full max-w-sm rounded-xl border border-zinc-100 bg-white p-8 shadow-sm">

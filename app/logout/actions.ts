@@ -11,5 +11,5 @@ export async function logout() {
     path: "/",
     maxAge: 0,
   });
-  redirect("/login");
+  redirect("/auth/login");
 }

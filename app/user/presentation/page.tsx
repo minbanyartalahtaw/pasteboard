@@ -4,16 +4,20 @@ import { IconPresentation } from "@tabler/icons-react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewPresentationDialog from "./NewPresentationDialog";
+import { DashboardHeader } from "./DashboardHeader";
 
 export default async function PresentationListPage() {
   const session = await getSession();
 
   if (!session) {
     return (
-      <EmptyShell
-        title="Sign in to view your presentations"
-        description="You need an account to create and manage presentations."
-      />
+      <>
+        <DashboardHeader />
+        <EmptyShell
+          title="Sign in to view your presentations"
+          description="You need an account to create and manage presentations."
+        />
+      </>
     );
   }
 
@@ -36,16 +40,20 @@ export default async function PresentationListPage() {
 
   if (presentations.length === 0) {
     return (
-      <EmptyShell
-        title="No presentations yet"
-        description="Create your first presentation to get started."
-
-      />
+      <>
+        <DashboardHeader />
+        <EmptyShell
+          title="No presentations yet"
+          description="Create your first presentation to get started."
+        />
+      </>
     );
   }
 
   return (
-    <div className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <>
+      <DashboardHeader />
+      <div className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
@@ -63,7 +71,7 @@ export default async function PresentationListPage() {
           {presentations.map((p) => (
             <li key={p.id}>
               <Link
-                href={`/presentation/${p.id}`}
+                href={`/user/presentation/${p.id}`}
                 className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-zinc-950/50"
               >
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -105,6 +113,7 @@ export default async function PresentationListPage() {
         </ul>
       </div>
     </div>
+    </>
   );
 }
 

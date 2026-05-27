@@ -14,7 +14,7 @@ export default async function PresentationPage({
 
   const session = await getSession();
   if (!session) {
-    redirect(`/login?next=/presentation/${id}`);
+    redirect(`/auth/login?next=/user/presentation/${id}`);
   }
 
   const presentation = await prisma.presentation.findFirst({

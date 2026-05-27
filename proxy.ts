@@ -9,7 +9,7 @@ export async function proxy(req: NextRequest) {
 
   if (!session) {
     const url = req.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/auth/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
@@ -18,5 +18,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/presentation/:path*"],
+  matcher: ["/user/:path*"],
 };

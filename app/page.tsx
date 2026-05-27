@@ -65,7 +65,7 @@ export default function Home() {
           </nav>
           <div className="flex items-center gap-3">
             <MobileNav />
-            <Link href="/login">
+            <Link href="/auth/login">
               <Button>Get started</Button>
             </Link>
           </div>
@@ -85,7 +85,7 @@ export default function Home() {
             — no rebuilding required.
           </p>
           <div className="mt-10 flex items-center gap-5">
-            <Link href="/login">
+            <Link href="/auth/login">
               <Button size="lg">Start pasting</Button>
             </Link>
             <a

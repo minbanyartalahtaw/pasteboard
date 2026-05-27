@@ -289,7 +289,7 @@ export default function PlaygroundPage() {
           <Link href="/">
             <Image src="/logo.png" alt="Pasteboard" width={100} height={30} priority />
           </Link>
-          <Link href="/login">
+          <Link href="/auth/login">
             <Button size="sm">Get started</Button>
           </Link>
         </div>

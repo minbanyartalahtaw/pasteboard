@@ -18,7 +18,7 @@ export async function createPresentation(
     data: { userId: session.userId, title: trimmed },
     select: { id: true },
   });
-  revalidatePath("/presentation", "layout");
+  revalidatePath("/user/presentation", "layout");
   return { ok: true, id: presentation.id };
 }
 
@@ -37,7 +37,7 @@ export async function deletePresentation(id: string): Promise<Result> {
   if (!ok) return { ok: false, error: "Not found" };
 
   await prisma.presentation.delete({ where: { id } });
-  revalidatePath("/presentation", "layout");
+  revalidatePath("/user/presentation", "layout");
   return { ok: true };
 }
 
@@ -52,6 +52,6 @@ export async function setPresentationPublic(
     where: { id },
     data: { isPublic },
   });
-  revalidatePath("/presentation", "layout");
+  revalidatePath("/user/presentation", "layout");
   return { ok: true };
 }

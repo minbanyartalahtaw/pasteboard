@@ -37,7 +37,7 @@ import { Button } from "@/components/ui/button"
 import {
   deletePresentation,
   setPresentationPublic,
-} from "@/app/presentation/actions"
+} from "@/app/user/presentation/actions"
 
 export function PresentationSidebarItem({
   id,
@@ -56,7 +56,7 @@ export function PresentationSidebarItem({
   const [copied, setCopied] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const href = `/presentation/${id}`
+  const href = `/user/presentation/${id}`
   const isActive = pathname === href || pathname.startsWith(`${href}/`)
   const publicUrl =
     typeof window !== "undefined" ? `${window.location.origin}/public/${id}` : ""
@@ -89,7 +89,7 @@ export function PresentationSidebarItem({
   const handleDelete = () => {
     startTransition(async () => {
       await deletePresentation(id)
-      if (isActive) router.push("/presentation")
+      if (isActive) router.push("/user/presentation")
     })
   }
 

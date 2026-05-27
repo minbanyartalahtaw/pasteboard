@@ -19,7 +19,7 @@ export default function PresentationLayout({
           <SidebarTrigger />
           <div
             id={HEADER_SLOT_ID}
-            className="flex min-w-0 flex-1 items-center justify-end"
+            className="flex min-w-0 flex-1 items-center"
           />
         </header>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">

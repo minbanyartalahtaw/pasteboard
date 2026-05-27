@@ -44,7 +44,7 @@ export async function savePresentation(
       : []),
   ]);
 
-  revalidatePath("/presentation", "layout");
+  revalidatePath("/user/presentation", "layout");
 
   return { ok: true };
 }

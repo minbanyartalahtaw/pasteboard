@@ -14,7 +14,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { createPresentation } from "@/app/presentation/actions";
+import { createPresentation } from "@/app/user/presentation/actions";
 
 type NewPresentationDialogProps = {
 	triggerLabel?: string;
@@ -36,7 +36,7 @@ export default function NewPresentationDialog({
 			if (result.ok) {
 				setOpen(false);
 				setTitle("");
-				router.push(`/presentation/${result.id}`);
+				router.push(`/user/presentation/${result.id}`);
 			}
 		});
 	};
