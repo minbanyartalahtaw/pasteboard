@@ -40,3 +40,15 @@ export default async function PresentationPage({
   );
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const presentation = await prisma.presentation.findFirst({ where: { id } });
+  return {
+    title: presentation ? `${presentation.title}` : "Presentation",
+  };
+}
+

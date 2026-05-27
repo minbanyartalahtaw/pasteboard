@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-export default function PresentationLayout({
+export default function UserLayout({
   children,
 }: {
   children: React.ReactNode

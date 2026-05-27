@@ -149,3 +149,11 @@ function formatRelative(date: Date): string {
   if (d < 7) return `${d}d ago`;
   return date.toLocaleDateString();
 }
+
+
+export async function generateMetadata() {
+  return {
+    title: "Dashboard",
+    description: "View and manage your presentations.",
+  };
+}
