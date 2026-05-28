@@ -16,7 +16,7 @@ export default function LoginForm() {
   const registerHref = next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register";
 
   return (
-    <div className="w-full max-w-sm rounded-xl border border-zinc-100 bg-white p-8 shadow-sm">
+    <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
       <div className="mb-8 flex items-center justify-start gap-3">
         <Link href="/" >
         <Image
@@ -26,8 +26,8 @@ export default function LoginForm() {
           height={34}
         />
         </Link>
-        <span className="h-6 w-px bg-zinc-200" aria-hidden />
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+        <span className="h-6 w-px bg-border" aria-hidden />
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Sign in
         </h1>
       </div>
@@ -36,7 +36,7 @@ export default function LoginForm() {
         <input type="hidden" name="next" value={next} />
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-700">Email</span>
+          <span className="text-sm font-medium text-foreground">Email</span>
           <Input
             name="email"
             type="email"
@@ -47,7 +47,7 @@ export default function LoginForm() {
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-700">Password</span>
+          <span className="text-sm font-medium text-foreground">Password</span>
           <Input
             name="password"
             type="password"
@@ -70,9 +70,9 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-zinc-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         No account?{" "}
-        <Link href={registerHref} className="font-medium text-zinc-900 hover:underline">
+        <Link href={registerHref} className="font-medium text-foreground hover:underline">
           Sign up
         </Link>
       </p>

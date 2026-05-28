@@ -44,15 +44,15 @@ export function WorkflowSwitcher() {
               onClick={() => setActive(i)}
               className={`flex items-start gap-4 rounded-lg border px-5 py-4 text-left transition-colors ${
                 isActive
-                  ? "border-zinc-900 bg-zinc-900 text-white"
-                  : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-300"
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-background text-foreground hover:bg-muted"
               }`}
             >
               <span
                 className={`flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold tabular-nums ${
                   isActive
-                    ? "bg-white text-zinc-900"
-                    : "bg-zinc-100 text-zinc-500"
+                    ? "bg-background text-foreground"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {s.n}
@@ -63,7 +63,7 @@ export function WorkflowSwitcher() {
                 </span>
                 <span
                   className={`mt-1 text-xs leading-relaxed ${
-                    isActive ? "text-zinc-300" : "text-zinc-500"
+                    isActive ? "text-background/70" : "text-muted-foreground"
                   }`}
                 >
                   {s.description}
@@ -73,7 +73,7 @@ export function WorkflowSwitcher() {
           );
         })}
       </div>
-      <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
+      <div className="mt-6 overflow-hidden rounded-lg border border-border bg-muted shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
         <video
           key={step.video}
           aria-label={step.aria}
@@ -83,7 +83,7 @@ export function WorkflowSwitcher() {
           playsInline
           poster={step.poster}
           preload="metadata"
-          className="aspect-[16/10] w-full bg-zinc-100 object-cover"
+          className="aspect-[16/10] w-full bg-muted object-cover"
         >
           <source src={step.video} type="video/mp4" />
         </video>

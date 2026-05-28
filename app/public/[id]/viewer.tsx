@@ -118,7 +118,7 @@ export default function PublicViewer({
         >
           {slide ? (
             <div
-              className="origin-top-left"
+              className="relative origin-top-left"
               style={{
                 width: "1920px",
                 height: "1080px",
@@ -134,6 +134,9 @@ export default function PublicViewer({
                 className="border-0 block"
                 title={`Slide ${current + 1}`}
               />
+              {isFullscreen && (
+                <div className="absolute inset-0" aria-hidden />
+              )}
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm">

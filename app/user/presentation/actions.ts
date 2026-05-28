@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { list, del } from "@vercel/blob";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -37,6 +38,12 @@ export async function deletePresentation(id: string): Promise<Result> {
   if (!ok) return { ok: false, error: "Not found" };
 
   await prisma.presentation.delete({ where: { id } });
+
+  const { blobs } = await list({ prefix: `slides/${id}/` });
+  if (blobs.length > 0) {
+    await Promise.allSettled(blobs.map((b) => del(b.url)));
+  }
+
   revalidatePath("/user/presentation", "layout");
   return { ok: true };
 }

@@ -262,8 +262,7 @@ export default function PlaygroundPage() {
     const el = previewWrapperRef.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      setScale(Math.min(width / 1280, height / 720))
+      setScale(entry.contentRect.width / 1280)
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -282,10 +281,10 @@ export default function PlaygroundPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white">
+    <div className="min-h-dvh flex flex-col bg-background">
       {/* Header */}
-      <header className="flex-none bg-white border-b border-zinc-200">
-        <div className="flex items-center justify-between px-4 py-2">
+      <header className="sticky top-0 z-10 flex-none border-b border-border bg-background">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-2">
           <Link href="/">
             <Image src="/logo.png" alt="Pasteboard" width={100} height={30} priority />
           </Link>
@@ -295,85 +294,71 @@ export default function PlaygroundPage() {
         </div>
       </header>
 
-      {/* Body — stacked on mobile/tablet, side-by-side on desktop */}
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* Left panel */}
-        <div className="flex flex-1 flex-col lg:flex-none lg:w-[400px]">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
-            <div className="flex flex-none items-center justify-between px-3 py-2">
-              <TabsList>
-                <TabsTrigger value="code">Code</TabsTrigger>
-                <TabsTrigger value="prompt">Prompt</TabsTrigger>
-              </TabsList>
-              <Button size="sm" variant="ghost" onClick={activeTab === "code" ? copyCode : copyPrompt}>
-                {(activeTab === "code" ? codeCopied : promptCopied)
-                  ? <IconCopyCheck size={15} />
-                  : <IconCopy size={15} />}
-              </Button>
-            </div>
+      {/* Content */}
+      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 flex flex-col gap-4">
 
-            {/* Code tab */}
-            <TabsContent value="code" className="flex min-h-0 flex-1 flex-col p-3">
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                spellCheck={false}
-                className="min-h-0 flex-1 resize-none rounded border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-[12px] leading-relaxed text-zinc-800 outline-none focus:border-zinc-400"
-              />
-            </TabsContent>
-
-            {/* Prompt tab */}
-            <TabsContent value="prompt" className="flex min-h-0 flex-1 flex-col gap-2 p-3">
-              <div className="min-h-0 flex-1 overflow-y-auto rounded bg-zinc-50 p-3">
-                <pre className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-zinc-700">
-                  {PROMPT}
-                </pre>
-              </div>
-              <p className="text-[11px] leading-relaxed text-zinc-400">
-                Replace the last line with your topic → copy → paste into ChatGPT or Claude → paste the HTML into the Code tab.
-              </p>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Right panel — live preview */}
-        <div className="flex h-[42vh] flex-none flex-col lg:h-auto lg:flex-1">
+        {/* Preview — top */}
+        <div
+          ref={previewWrapperRef}
+          className="relative w-full overflow-hidden rounded-lg border border-border"
+          style={{ aspectRatio: "16 / 9" }}
+        >
           <div
-            ref={previewWrapperRef}
-            className="flex flex-1 min-h-0 items-center justify-center overflow-hidden px-2 lg:px-5"
+            style={{
+              width: 1280,
+              height: 720,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
           >
-            <div
-              style={{
-                width: Math.round(1280 * scale),
-                height: Math.round(720 * scale),
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: 8,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-              }}
-            >
-              <div
-                style={{
-                  width: 1280,
-                  height: 720,
-                  transform: `scale(${scale})`,
-                  transformOrigin: "top left",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                }}
-              >
-                <iframe
-                  ref={iframeRef}
-                  srcDoc={code}
-                  sandbox="allow-scripts"
-                  title="Slide preview"
-                  className="h-full w-full bg-white"
-                />
-              </div>
-            </div>
+            <iframe
+              ref={iframeRef}
+              srcDoc={code}
+              sandbox="allow-scripts"
+              title="Slide preview"
+              className="block h-full w-full"
+            />
           </div>
         </div>
+
+        {/* Editor — bottom */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-2 pb-6">
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="code">Code</TabsTrigger>
+              <TabsTrigger value="prompt">Prompt</TabsTrigger>
+            </TabsList>
+            <Button size="sm" variant="ghost" onClick={activeTab === "code" ? copyCode : copyPrompt}>
+              {(activeTab === "code" ? codeCopied : promptCopied)
+                ? <IconCopyCheck size={15} />
+                : <IconCopy size={15} />}
+            </Button>
+          </div>
+
+          <TabsContent value="code">
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              spellCheck={false}
+              className="w-full h-56 sm:h-64 md:h-72 resize-none rounded border border-border bg-muted p-2.5 font-mono text-[12px] leading-relaxed text-foreground outline-none focus:border-ring"
+            />
+          </TabsContent>
+
+          <TabsContent value="prompt" className="flex flex-col gap-2">
+            <div className="h-56 sm:h-64 md:h-72 overflow-y-auto rounded bg-muted p-3">
+              <pre className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-foreground">
+                {PROMPT}
+              </pre>
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Replace the last line with your topic → copy → paste into ChatGPT or Claude → paste the HTML into the Code tab.
+            </p>
+          </TabsContent>
+        </Tabs>
+
       </div>
     </div>
   )

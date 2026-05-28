@@ -76,6 +76,7 @@ export default function PresentationEditor({
   const [pasteHtml, setPasteHtml] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editOriginal, setEditOriginal] = useState<string>("");
+  const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
@@ -261,7 +262,7 @@ export default function PresentationEditor({
       ref={rootRef}
       className={cn(
         "relative flex flex-1 min-h-0 flex-col font-sans pt-[env(safe-area-inset-top)]",
-        isFullscreen ? "bg-black text-white" : "bg-[#f0f0f5] text-zinc-900"
+        isFullscreen ? "bg-black text-white" : "bg-muted text-foreground"
       )}
     >
       <HeaderSlot>
@@ -272,7 +273,7 @@ export default function PresentationEditor({
             spellCheck={false}
             placeholder="Untitled"
             aria-label="Presentation title"
-            className="h-8 w-32 sm:w-50 text-sm font-medium border-transparent bg-white/80 backdrop-blur hover:border-input focus-visible:bg-white"
+            className="h-8 w-50 sm:w-50 text-sm font-medium border-transparent bg-background/80 backdrop-blur hover:border-input focus-visible:bg-background"
           />
           <Button
             variant="ghost"
@@ -289,7 +290,7 @@ export default function PresentationEditor({
       <main
         ref={mainRef}
         className={cn(
-          "flex-1 min-h-0 flex items-center justify-center",
+          "flex-1 min-h-0 flex items-center justify-center bg-background/70",
           isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8"
         )}
       >
@@ -298,13 +299,13 @@ export default function PresentationEditor({
             "overflow-hidden",
             isFullscreen
               ? "bg-black"
-              : "bg-white rounded-md border border-zinc-200 shadow-sm"
+              : "bg-card rounded-md border border-border shadow-sm"
           )}
           style={{ width: frame.w, height: frame.h }}
         >
           {currentSlide ? (
             <div
-              className="origin-top-left"
+              className="relative origin-top-left"
               style={{
                 width: "1920px",
                 height: "1080px",
@@ -320,12 +321,15 @@ export default function PresentationEditor({
                 className="border-0 block"
                 title={`Slide ${current + 1}`}
               />
+              {isFullscreen && (
+                <div className="absolute inset-0" aria-hidden />
+              )}
             </div>
           ) : (
             <button
               type="button"
               onClick={openAddModal}
-              className="w-full h-full flex items-center justify-center gap-2 text-sm text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="w-full h-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <span>Add your first slide</span>
               <IconArrowDownRight className="size-4" />
@@ -336,7 +340,7 @@ export default function PresentationEditor({
 
       <footer
         className={cn(
-          "shrink-0 bg-white border-t border-zinc-200 px-4 pt-3 flex items-center gap-3",
+          "shrink-0 bg-background border-t border-border px-4 pt-3 flex items-center gap-3",
           isFullscreen && "hidden"
         )}
         style={{
@@ -371,7 +375,7 @@ export default function PresentationEditor({
                   onSelect={() => setCurrent(i)}
                   onEdit={() => openEdit(i)}
                   onDuplicate={() => duplicateSlide(i)}
-                  onDelete={() => deleteSlide(i)}
+                  onDelete={() => setDeleteConfirmIdx(i)}
                 />
               ))}
             </div>
@@ -403,7 +407,7 @@ export default function PresentationEditor({
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") confirmAdd();
             }}
-            className="min-h-40 max-h-60 p-3 border border-zinc-200 rounded font-mono text-xs text-zinc-800 resize-none"
+            className="min-h-40 max-h-60 p-3 border border-border rounded font-mono text-xs text-foreground resize-none"
             placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Hello</h1>\n  </body>\n</html>`}
           />
           <DialogFooter>
@@ -420,6 +424,32 @@ export default function PresentationEditor({
               disabled={!pasteHtml.trim()}
             >
               Add slide
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmIdx !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmIdx(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete slide?</DialogTitle>
+            <DialogDescription>
+              Slide {deleteConfirmIdx !== null ? deleteConfirmIdx + 1 : ""} will be permanently removed. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirmIdx(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (deleteConfirmIdx !== null) deleteSlide(deleteConfirmIdx);
+                setDeleteConfirmIdx(null);
+              }}
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -445,7 +475,7 @@ export default function PresentationEditor({
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") saveEdit();
               if (e.key === "Escape") cancelEdit();
             }}
-            className="flex-1 min-h-40 p-3 border-x-0 border-y border-zinc-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-zinc-200 font-mono text-xs text-zinc-800 resize-none"
+            className="flex-1 min-h-40 p-3 border-x-0 border-y border-border rounded-none shadow-none focus-visible:ring-0 focus-visible:border-border font-mono text-xs text-foreground resize-none"
           />
           <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
             <Button variant="ghost" size="sm" onClick={cancelEdit}>
@@ -513,7 +543,7 @@ function Thumb({
       {...attributes}
       className={cn(
         "flex items-center gap-1 shrink-0 rounded-sm transition-colors border-4",
-        active ? "border-primary" : "border-transparent",
+        active ? "border-primary dark:border-primary/50" : "border-transparent",
         isDragging && "opacity-50"
       )}
     >
@@ -521,7 +551,7 @@ function Thumb({
         {...listeners}
         className={cn(
           "text-[11px] tabular-nums font-medium w-4 text-right transition-colors cursor-grab active:cursor-grabbing select-none",
-          active ? "text-blue-500" : "text-zinc-400"
+          active ? "text-primary" : "text-muted-foreground"
         )}
       >
         {index + 1}
@@ -534,10 +564,10 @@ function Thumb({
           "relative group shrink-0 p-[5px] cursor-pointer transition-colors"
         )}
       >
-        <div className="relative w-[128px] h-[72px] overflow-hidden bg-white">
+        <div className="relative w-[128px] h-[72px] overflow-hidden bg-card">
           {isGenerating ? (
-            <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
-              <IconLoader2 className="size-4 text-zinc-400 animate-spin" />
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <IconLoader2 className="size-4 text-muted-foreground animate-spin" />
             </div>
           ) : slide.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -547,14 +577,14 @@ function Thumb({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-zinc-100" />
+            <div className="w-full h-full bg-muted" />
           )}
           <DropdownMenu>
             <DropdownMenuTrigger
               onClick={(e) => e.stopPropagation()}
               title="Slide options"
               className={cn(
-                "absolute top-1 right-1 size-5 rounded-md bg-white/90 backdrop-blur-sm text-zinc-700 hover:bg-white hover:text-zinc-900 shadow-sm flex items-center justify-center transition-opacity outline-none data-[state=open]:opacity-100",
+                "absolute top-1 right-1 size-5 rounded-md bg-card/90 backdrop-blur-sm text-foreground hover:bg-card shadow-sm flex items-center justify-center transition-opacity outline-none data-[state=open]:opacity-100",
                 active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
               )}
             >

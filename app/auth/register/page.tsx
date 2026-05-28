@@ -18,7 +18,7 @@ function RegisterForm() {
     : "/auth/login";
 
   return (
-    <div className="w-full max-w-sm bg-zinc-50 rounded-lg border border-zinc-200 shadow-sm p-6">
+    <div className="w-full max-w-sm bg-card rounded-lg border border-border shadow-sm p-6">
              <div className="mb-8 flex items-center justify-start gap-3">
                <Link href="/" >
                <Image
@@ -28,8 +28,8 @@ function RegisterForm() {
                  height={34}
                />
                </Link>
-               <span className="h-6 w-px bg-zinc-200" aria-hidden />
-               <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+               <span className="h-6 w-px bg-border" aria-hidden />
+               <h1 className="text-xl font-semibold tracking-tight text-foreground">
                  Sign Up
                </h1>
              </div>
@@ -39,14 +39,14 @@ function RegisterForm() {
         <input type="hidden" name="next" value={next} />
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-700">
-            Name <span className="text-zinc-400 font-normal">(optional)</span>
+          <span className="text-sm font-medium text-foreground">
+            Name <span className="text-muted-foreground font-normal">(optional)</span>
           </span>
           <Input name="name" type="text" autoComplete="name" />
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-700">Email</span>
+          <span className="text-sm font-medium text-foreground">Email</span>
           <Input
             name="email"
             type="email"
@@ -57,7 +57,7 @@ function RegisterForm() {
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-zinc-700">Password</span>
+          <span className="text-sm font-medium text-foreground">Password</span>
           <Input
             name="password"
             type="password"
@@ -65,7 +65,7 @@ function RegisterForm() {
             required
             minLength={6}
           />
-          <span className="text-xs text-zinc-400">
+          <span className="text-xs text-muted-foreground">
             At least 6 characters.
           </span>
         </label>
@@ -84,11 +84,11 @@ function RegisterForm() {
         </Button>
       </form>
 
-      <p className="text-sm text-zinc-500 mt-6 text-center">
+      <p className="text-sm text-muted-foreground mt-6 text-center">
         Already have an account?{" "}
         <Link
           href={loginHref}
-          className="text-zinc-900 font-medium hover:underline"
+          className="text-foreground font-medium hover:underline"
         >
           Sign in
         </Link>
@@ -99,7 +99,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f0f0f5] px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <Suspense fallback={null}>
         <RegisterForm />
       </Suspense>

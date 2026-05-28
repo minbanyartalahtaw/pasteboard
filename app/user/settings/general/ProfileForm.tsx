@@ -1,11 +1,35 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { IconPencil, IconCheck, IconLoader2, IconX } from "@tabler/icons-react";
 import { updateProfile } from "./actions";
+
+function ThemeSelect() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <Select value={theme ?? "light"} onValueChange={setTheme}>
+      <SelectTrigger className="w-32">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="light">Light</SelectItem>
+        <SelectItem value="dark">Dark</SelectItem>
+        <SelectItem value="system">System</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
 
 export default function ProfileForm({
   initialName,
@@ -99,6 +123,17 @@ export default function ProfileForm({
           <span className="text-sm font-medium">Email</span>
           <span className="text-sm text-muted-foreground">{email}</span>
         </div>
+      </div>
+
+            <Separator />
+
+      {/* Theme */}
+      <div className="flex items-center justify-between py-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium">Theme</span>
+          <span className="text-sm text-muted-foreground">Choose your preferred appearance</span>
+        </div>
+        <ThemeSelect />
       </div>
     </div>
   );

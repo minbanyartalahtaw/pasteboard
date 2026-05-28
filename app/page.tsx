@@ -33,8 +33,8 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-zinc-900">
-      <header className="sticky top-0 z-10 border-b border-zinc-100 bg-white/80 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Image
             src="/logo.png"
@@ -43,20 +43,20 @@ export default function Home() {
             height={40}
             loading="eager"
           />
-          <nav className="hidden items-center gap-8 text-sm text-zinc-600 md:flex">
+          <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
             <a
-              className="transition-colors hover:text-zinc-900"
+              className="transition-colors hover:text-foreground"
               href="#workflow"
             >
               Workflow
             </a>
             <a
-              className="transition-colors hover:text-zinc-900"
+              className="transition-colors hover:text-foreground"
               href="#features"
             >
               Features
             </a>
-            <a className="transition-colors hover:text-zinc-900" href="#faq">
+            <a className="transition-colors hover:text-foreground" href="#faq">
               FAQ
             </a>
             <a className="font-medium text-primary transition-colors hover:text-primary/80" href="/playground">
@@ -80,7 +80,7 @@ export default function Home() {
           <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
             Turn <K>HTML</K> into <K>slides</K> in seconds.
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-zinc-600 md:text-lg">
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Paste a page. Keep your <K>CSS</K>. Publish a <K>shareable</K> deck
             — no rebuilding required.
           </p>
@@ -90,13 +90,13 @@ export default function Home() {
             </Link>
             <a
               href="#workflow"
-              className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               See how it works →
             </a>
           </div>
-          <section id="workflow" className="border-t border-zinc-100 py-20">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
+          <section id="workflow" className="border-t border-border py-20">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Work Flow
             </h2>
             <div className="mt-10">
@@ -105,8 +105,8 @@ export default function Home() {
           </section>
         </section>
 
-        <section id="features" className="border-t border-zinc-100 py-20">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
+        <section id="features" className="border-t border-border py-20">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             What it does
           </h2>
           <div className="mt-10 space-y-14">
@@ -115,7 +115,7 @@ export default function Home() {
                 key={f.title}
                 className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(220px,0.65fr)] lg:items-center"
               >
-                <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 shadow-[0_18px_55px_rgba(24,24,27,0.08)]">
+                <div className="overflow-hidden rounded-lg border border-border bg-muted shadow-[0_18px_55px_rgba(24,24,27,0.08)] dark:shadow-[0_18px_55px_rgba(0,0,0,0.3)]">
                   <video
                     aria-label={f.label}
                     autoPlay
@@ -123,7 +123,7 @@ export default function Home() {
                     playsInline
                     poster={f.poster}
                     preload="metadata"
-                    className="aspect-[16/10] w-full bg-zinc-100 object-cover"
+                    className="aspect-[16/10] w-full bg-muted object-cover"
                   >
                     <source src={f.video} type="video/mp4" />
                   </video>
@@ -132,7 +132,7 @@ export default function Home() {
                   <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                     {f.title}
                   </span>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
                     {f.detail}
                   </p>
                 </div>
@@ -141,8 +141,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="faq" className="border-t border-zinc-100 py-20">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">
+        <section id="faq" className="border-t border-border py-20">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             FAQ
           </h2>
           <Accordion type="single" collapsible className="mt-10">
@@ -165,10 +165,10 @@ export default function Home() {
               }
             ].map((item) => (
               <AccordionItem key={item.q} value={item.q}>
-                <AccordionTrigger className="text-base font-medium text-zinc-900 hover:no-underline">
+                <AccordionTrigger className="text-base font-medium text-foreground hover:no-underline">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-zinc-600">
+                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -177,17 +177,17 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-zinc-100">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-zinc-500 md:flex-row">
+      <footer className="border-t border-border">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-muted-foreground md:flex-row">
           <span>© 2026 Pasteboard</span>
           <div className="flex items-center gap-6">
-            <a className="transition-colors hover:text-zinc-900" href="#">
+            <a className="transition-colors hover:text-foreground" href="#">
               Privacy
             </a>
-            <a className="transition-colors hover:text-zinc-900" href="#">
+            <a className="transition-colors hover:text-foreground" href="#">
               Terms
             </a>
-            <a className="transition-colors hover:text-zinc-900" href="#">
+            <a className="transition-colors hover:text-foreground" href="#">
               Support
             </a>
           </div>

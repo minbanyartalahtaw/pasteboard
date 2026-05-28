@@ -20,7 +20,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       
       <SheetTrigger asChild>
-        <button className="flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:text-zinc-900 md:hidden">
+        <button className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground md:hidden">
           <IconMenu2 size={20} />
         </button>
       </SheetTrigger>
@@ -32,8 +32,8 @@ export function MobileNav() {
               key={l.label}
               href={l.href}
               onClick={() => setOpen(false)}
-              className={`px-6 py-3.5 text-sm font-medium transition-colors hover:bg-zinc-50 ${
-                l.primary ? "text-primary" : "text-zinc-700"
+              className={`px-6 py-3.5 text-sm font-medium transition-colors hover:bg-muted ${
+                l.primary ? "text-primary" : "text-foreground"
               }`}
             >
               {l.label}

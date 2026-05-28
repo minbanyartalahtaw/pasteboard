@@ -53,12 +53,12 @@ export default async function PresentationListPage() {
   return (
     <>
       <DashboardHeader />
-      <div className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+      <div className="flex-1 bg-background">
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               {presentations.length}{" "}
               {presentations.length === 1 ? "presentation" : "presentations"}
             </p>
@@ -72,9 +72,9 @@ export default async function PresentationListPage() {
             <li key={p.id}>
               <Link
                 href={`/user/presentation/${p.id}`}
-                className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-zinc-950/50"
+                className="group block overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                <div className="relative aspect-video w-full overflow-hidden bg-muted">
                   {p.slides[0]?.thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -83,7 +83,7 @@ export default async function PresentationListPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-zinc-400 dark:text-zinc-600">
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                       <IconPresentation className="size-8" />
                     </div>
                   )}
@@ -101,7 +101,7 @@ export default async function PresentationListPage() {
                       {p.title}
                     </h2>
                   </div>
-                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {p._count.slides}{" "}
                     {p._count.slides === 1 ? "slide" : "slides"} ·{" "}
                     {formatRelative(p.updatedAt)}
@@ -127,11 +127,11 @@ function EmptyShell({
   return (
     <div className="flex flex-1 items-center justify-center  px-6 py-16 ">
       <div className="flex max-w-sm flex-col items-center text-center">
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <IconPresentation className="size-6" />
         </div>
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-        <p className="mt-1 mb-6 text-sm text-zinc-500">{description}</p>
+        <p className="mt-1 mb-6 text-sm text-muted-foreground">{description}</p>
         <NewPresentationDialog />
       </div>
     </div>

@@ -15,7 +15,7 @@ export default function UserLayout({
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
       <AppSideBar />
       <SidebarInset className="min-w-0 min-h-0 overflow-hidden">
-        <header className="flex h-10 w-full flex-row shrink-0 items-center justify-center gap-1 sm:gap-2  px-2">
+        <header className="flex h-10 w-full flex-row shrink-0 items-center justify-center gap-1 sm:gap-2 px-2 bg-background border-b border-border">
           <SidebarTrigger />
           <div
             id={HEADER_SLOT_ID}

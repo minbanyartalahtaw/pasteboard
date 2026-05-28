@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SettingsHeader } from "./SettingHeader";
 
 const navItems = [
-  { label: "General", href: "/user/settings/profile" },
+  { label: "General", href: "/user/settings/general" },
   { label: "Password", href: "/user/settings/password" },
   { label: "API Key", href: "/user/settings/api-key" },
 ];
@@ -17,9 +18,9 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="flex h-full w-full max-w-4xl mx-auto">
+      <SettingsHeader />
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-52 shrink-0  h-full pt-8 px-3 gap-0.5">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 pb-2">Settings</p>
         {navItems.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
@@ -28,7 +29,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
               href={item.href}
               className={`rounded-md px-3 py-2 text-sm transition-colors ${
                 active
-                  ? "bg-accent text-white font-medium"
+                  ? "bg-accent text-accent-foreground font-medium"
                   : "text-muted-foreground hover:text-foreground "
               }`}
             >

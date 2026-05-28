@@ -33,6 +33,16 @@ export async function savePresentation(
     order,
   }));
 
+  const existingSlides = await prisma.slide.findMany({
+    where: { presentationId },
+    select: { thumbnailUrl: true },
+  });
+
+  const incomingUrls = new Set(slides.map((s) => s.thumbnailUrl).filter(Boolean));
+  const orphanedUrls = existingSlides
+    .map((s) => s.thumbnailUrl)
+    .filter((url): url is string => !!url && url.includes("blob.vercel-storage.com") && !incomingUrls.has(url));
+
   await prisma.$transaction([
     prisma.presentation.update({
       where: { id: presentationId },
@@ -43,6 +53,10 @@ export async function savePresentation(
       ? [prisma.slide.createMany({ data: slides })]
       : []),
   ]);
+
+  if (orphanedUrls.length > 0) {
+    await Promise.allSettled(orphanedUrls.map((url) => del(url)));
+  }
 
   revalidatePath("/user/presentation", "layout");
 

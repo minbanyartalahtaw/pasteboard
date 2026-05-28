@@ -159,7 +159,7 @@ export function PresentationSidebarItem({
             </DialogDescription>
           </DialogHeader>
                     {thumbnailUrl && (
-            <div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
+            <div className="overflow-hidden rounded-md border border-border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/thumbnail?url=${encodeURIComponent(thumbnailUrl)}`}
