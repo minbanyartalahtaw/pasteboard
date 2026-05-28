@@ -18,7 +18,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex h-full w-full max-w-4xl mx-auto">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-52 shrink-0 border-r h-full pt-8 px-3 gap-0.5">
+      <aside className="hidden md:flex flex-col w-52 shrink-0  h-full pt-8 px-3 gap-0.5">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 pb-2">Settings</p>
         {navItems.map((item) => {
           const active = pathname.startsWith(item.href);
@@ -41,7 +41,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-y-auto">
         {/* Mobile tabs */}
-        <div className="md:hidden border-b px-4 pt-4">
+        <div className="md:hidden  px-4 pt-4">
           <Tabs value={activeTab} onValueChange={(v) => router.push(v)}>
             <TabsList className="w-full">
               {navItems.map((item) => (
