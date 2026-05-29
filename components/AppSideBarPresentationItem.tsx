@@ -98,7 +98,7 @@ export function PresentationSidebarItem({
       <SidebarMenuButton asChild tooltip={title} isActive={isActive}>
         <Link href={href}>
           <IconPresentation />
-          <span>{title}</span>
+          <span className="truncate">{title}</span>
           {isPublic && (
             <IconWorld
               className="ml-auto text-emerald-600 dark:text-emerald-400"

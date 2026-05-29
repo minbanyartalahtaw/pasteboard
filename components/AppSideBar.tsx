@@ -82,6 +82,8 @@ export async function AppSideBar() {
 
       <SidebarContent>
 
+        <SidebarGroup>
+          <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SideBarNavLink href="/user/presentation" title="Home" exact>
@@ -89,15 +91,9 @@ export async function AppSideBar() {
                   <span>Dashboard</span>
                 </SideBarNavLink>
               </SidebarMenuItem>
-{/*               <SidebarMenuItem>
-                <NewPresentationDialog>
-                  <SidebarMenuButton tooltip="New presentation">
-                    <IconPlus />
-                    <span>New Presentation</span>
-                  </SidebarMenuButton>
-                </NewPresentationDialog>
-              </SidebarMenuItem> */}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
 
         <SidebarGroup>
