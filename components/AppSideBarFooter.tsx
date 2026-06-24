@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Avvvatars from "avvvatars-react";
 import { IconLogout, IconSelector, IconSettings } from "@tabler/icons-react";
 
@@ -6,9 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-
   DropdownMenuSeparator,
-
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,6 +16,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { logout } from "@/app/logout/actions";
 import Link from "next/link";
 
@@ -28,10 +36,24 @@ type AppSideBarFooterProps = {
 export default function AppSideBarFooter({ name, email }: AppSideBarFooterProps) {
   const logoutFormId = "logout-form";
   const displayName = name?.trim() || email || "Account";
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
-    <SidebarFooter >
+    <SidebarFooter>
       <form id={logoutFormId} action={logout} className="hidden" />
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Log out?</DialogTitle>
+            <DialogDescription>You will be signed out of your account.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" type="submit" form={logoutFormId}>Log out</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
@@ -53,15 +75,9 @@ export default function AppSideBarFooter({ name, email }: AppSideBarFooterProps)
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" asChild>
-                <button
-                  type="submit"
-                  form={logoutFormId}
-                  className="flex w-full items-center gap-2"
-                >
-                  <IconLogout />
-                  <span>Logout</span>
-                </button>
+              <DropdownMenuItem variant="destructive" onSelect={(e) => { e.preventDefault(); setConfirmOpen(true); }}>
+                <IconLogout />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

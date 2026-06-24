@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowDownRight, IconDots, IconLoader2, IconMaximize } from "@tabler/icons-react";
+import { IconArrowDownRight, IconDots, IconLoader2, IconMaximize, IconSparkles } from "@tabler/icons-react";
 import {
   DndContext,
   MouseSensor,
@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,8 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { savePresentation, generateSlideThumbnail } from "./actions";
+import { generateSlide } from "./ai-actions";
+import { SlideGeneratingAnimation } from "@/components/SlideGeneratingAnimation";
 
 type Slide = { id: string; html: string; thumbnailUrl: string | null };
 
@@ -61,19 +64,25 @@ type Props = {
   presentationId: string;
   initialTitle: string;
   initialSlides: Slide[];
+  credits: number;
 };
 
 export default function PresentationEditor({
   presentationId,
   initialTitle,
   initialSlides,
+  credits,
 }: Props) {
   const [title, setTitle] = useState(initialTitle);
   const [slides, setSlides] = useState<Slide[]>(initialSlides);
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [addTab, setAddTab] = useState<"paste" | "ai">("paste");
   const [pasteHtml, setPasteHtml] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editOriginal, setEditOriginal] = useState<string>("");
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null);
@@ -144,6 +153,9 @@ export default function PresentationEditor({
 
   const openAddModal = () => {
     setPasteHtml("");
+    setAiPrompt("");
+    setAiError(null);
+    setAddTab("paste");
     setShowModal(true);
   };
 
@@ -180,6 +192,28 @@ export default function PresentationEditor({
     setShowModal(false);
     setPasteHtml("");
     generateThumbnail(newSlide.id, html);
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    setAiError(null);
+
+    const result = await generateSlide(aiPrompt);
+
+    if ("error" in result) {
+      setAiError(result.error);
+      setAiLoading(false);
+      return;
+    }
+
+    const newSlide: Slide = { id: uid(), html: result.html, thumbnailUrl: null };
+    setSlides((s) => [...s, newSlide]);
+    setCurrent(slides.length);
+    setShowModal(false);
+    setAiPrompt("");
+    setAiLoading(false);
+    generateThumbnail(newSlide.id, result.html);
   };
 
   const deleteSlide = (i: number) => {
@@ -393,39 +427,72 @@ export default function PresentationEditor({
         </div>
       </footer>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog open={showModal} onOpenChange={(open) => { if (!aiLoading) setShowModal(open); }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add slide</DialogTitle>
-            <DialogDescription>
-              Paste raw HTML for your new slide.
-            </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={pasteHtml}
-            onChange={(e) => setPasteHtml(e.target.value)}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") confirmAdd();
-            }}
-            className="min-h-40 max-h-60 p-3 border border-border rounded font-mono text-xs text-foreground resize-none"
-            placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Hello</h1>\n  </body>\n</html>`}
-          />
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={confirmAdd}
-              disabled={!pasteHtml.trim()}
-            >
-              Add slide
-            </Button>
-          </DialogFooter>
+          <Tabs value={addTab} onValueChange={(v) => setAddTab(v as "paste" | "ai")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="paste" className="flex-1">Paste HTML</TabsTrigger>
+              <TabsTrigger value="ai" className="flex-1">
+                <IconSparkles className="size-4 mr-1.5" />
+                Generate with AI
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="paste" className="mt-4 flex flex-col gap-4 w-full">
+              <Textarea
+                value={pasteHtml}
+                onChange={(e) => setPasteHtml(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") confirmAdd();
+                }}
+                className="min-h-50 max-h-64 w-full resize-none overflow-y-auto"
+                placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Hello</h1>\n  </body>\n</html>`}
+              />
+              <DialogFooter>
+                <Button size="sm" onClick={confirmAdd} disabled={!pasteHtml.trim() || aiLoading}>
+                  Add slide
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+
+            <TabsContent value="ai" className="mt-4 flex flex-col gap-4">
+              {aiLoading ? (
+                <SlideGeneratingAnimation prompt={aiPrompt} />
+              ) : (
+                <>
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleAiGenerate();
+                    }}
+                    placeholder="e.g. A title slide for a startup pitch about an AI productivity app"
+                    className="min-h-50  max-h-50 resize-none overflow-y-auto"
+                  />
+                  {aiError && <p className="text-sm text-destructive">{aiError}</p>}
+                </>
+              )}
+              <DialogFooter className="flex flex-row items-center justify-end gap-2">
+                <span className="text-xs text-muted-foreground mr-auto">{credits} credits left</span>
+                <Button size="sm" onClick={handleAiGenerate} disabled={aiLoading || !aiPrompt.trim()}>
+                  {aiLoading ? (
+                    <>
+                      <IconLoader2 className="size-4 mr-2 animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <IconSparkles className="size-4 mr-2" />
+                      Generate
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

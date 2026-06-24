@@ -20,7 +20,9 @@ model User {
   passwordHash  String         // store the bcrypt/argon2 hash, not the password
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  credits       Int            @default(10)
   presentations Presentation[]
+  aiUsages      AiUsage[] 
 }
 
 model Presentation {
@@ -47,4 +49,20 @@ model Slide {
   updatedAt     DateTime     @updatedAt
 
   @@index([presentationId, order])
+}
+
+model AiUsage {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt          String   @db.Text          // the user's prompt
+  model           String                     // e.g. "claude-sonnet-4-6"
+  inputTokens     Int                        // tokens consumed for the prompt
+  outputTokens    Int                        // tokens consumed for the response
+  costUsd         Float                      // calculated cost in USD
+  success         Boolean                    // did the generation succeed?
+  errorMessage    String?                    // if success=false, reason
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }

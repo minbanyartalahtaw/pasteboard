@@ -17,12 +17,16 @@ export default async function PresentationPage({
     redirect(`/auth/login?next=/user/presentation/${id}`);
   }
 
-  const presentation = await prisma.presentation.findFirst({
-    where: { id, userId: session.userId },
-    include: {
-      slides: { orderBy: { order: "asc" } },
-    },
-  });
+  const [presentation, user] = await Promise.all([
+    prisma.presentation.findFirst({
+      where: { id, userId: session.userId },
+      include: { slides: { orderBy: { order: "asc" } } },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { credits: true },
+    }),
+  ]);
 
   if (!presentation) notFound();
 
@@ -36,6 +40,7 @@ export default async function PresentationPage({
         html: s.html,
         thumbnailUrl: s.thumbnailUrl ?? null,
       }))}
+      credits={user?.credits ?? 0}
     />
   );
 }

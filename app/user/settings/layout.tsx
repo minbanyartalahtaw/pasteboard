@@ -8,7 +8,7 @@ import { SettingsHeader } from "./SettingHeader";
 const navItems = [
   { label: "General", href: "/user/settings/general" },
   { label: "Password", href: "/user/settings/password" },
-  { label: "API Key", href: "/user/settings/api-key" },
+  { label: "AI Usage", href: "/user/settings/ai-usage" },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +21,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <SettingsHeader />
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-52 shrink-0  h-full pt-8 px-3 gap-0.5">
-        {navItems.map((item) => {
+        {navItems.map((item ) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
