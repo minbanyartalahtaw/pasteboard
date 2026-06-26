@@ -104,3 +104,16 @@ CHROME_PATH=/usr/bin/google-chrome   # local only; production uses @sparticuz/ch
 - Slide HTML is untrusted user content — the editor renders it inside `<iframe sandbox="allow-scripts allow-same-origin">`.
 - Use `@tabler/icons-react` for icons; do not add other icon libraries.
 - shadcn components are added via `npx shadcn add <component>` — do not hand-write Radix primitives.
+
+## Commit conventions
+
+When asked "what commit should I give" (or for a commit message):
+
+- **Do not** lump every change into one commit. Break the working tree into focused, step-by-step commits — one concern per commit, each with its own `git add` of just that file/area.
+- Prefix each message with a lowercase type tag, e.g.:
+  - `feature: ...` — new behavior
+  - `ui: ...` — visual / layout / styling changes
+  - `chore: ...` — deps, config, renames, tooling
+  - `fix: ...` — bug fixes
+  - `refactor: ...` — restructuring without behavior change
+- Give the exact `git add` + `git commit` commands for each step, in order, so the changes can be committed one at a time.
