@@ -3,7 +3,7 @@ import { getAiUsageData } from "./actions";
 export default async function AiUsagePage() {
   const { credits, aiUsages } = await getAiUsageData();
 
-  {/* const totalCost = aiUsages.reduce((sum, u) => sum + u.costUsd, 0); */}
+   const totalCost = aiUsages.reduce((sum, u) => sum + u.costUsd, 0); 
   const totalGenerations = aiUsages.filter((u) => u.success).length;
 
   return (
@@ -24,12 +24,12 @@ export default async function AiUsagePage() {
           <p className="text-sm text-muted-foreground">Total Generations</p>
           <p className="text-3xl font-bold mt-1">{totalGenerations}</p>
         </div>
-        {/* 
+         
         <div className="rounded-lg border p-4">
           <p className="text-sm text-muted-foreground">Total API Cost</p>
           <p className="text-3xl font-bold mt-1">${totalCost.toFixed(4)}</p>
         </div>
-        */}
+        
       </div>
 
       <div>
@@ -46,7 +46,7 @@ export default async function AiUsagePage() {
                   <th className="text-left p-3 font-medium">Prompt</th>
                   <th className="text-left p-3 font-medium">In</th>
                   <th className="text-left p-3 font-medium">Out</th>
-                {/*  <th className="text-left p-3 font-medium">Cost</th>*/}
+                 <th className="text-left p-3 font-medium">Cost</th>
                   <th className="text-left p-3 font-medium">Status</th>
                 </tr>
               </thead>
@@ -59,7 +59,7 @@ export default async function AiUsagePage() {
                     <td className="p-3 max-w-[200px] truncate">{usage.prompt}</td>
                     <td className="p-3">{usage.inputTokens.toLocaleString()}</td>
                     <td className="p-3">{usage.outputTokens.toLocaleString()}</td>
-                    {/*<td className="p-3">${usage.costUsd.toFixed(4)}</td>*/}
+                    <td className="p-3">${usage.costUsd.toFixed(4)}</td>
                     <td className="p-3">
                       {usage.success ? (
                         <span className="text-green-600 font-medium">Success</span>
