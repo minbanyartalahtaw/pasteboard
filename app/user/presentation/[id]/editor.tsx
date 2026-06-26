@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowDownRight, IconDots, IconLoader2, IconMaximize, IconSparkles } from "@tabler/icons-react";
+import {
+  IconArrowDownRight,
+  IconDots,
+  IconLoader2,
+  IconMaximize,
+  IconSparkles,
+  IconX,
+} from "@tabler/icons-react";
 import {
   DndContext,
   MouseSensor,
@@ -84,14 +91,19 @@ export default function PresentationEditor({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editOriginal, setEditOriginal] = useState<string>("");
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftHtml, setDraftHtml] = useState<string>("");
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
-  const { ref: rootRef, isFullscreen, toggle: toggleFullscreen } =
-    useFullscreen<HTMLDivElement>();
+  const {
+    ref: rootRef,
+    isFullscreen,
+    toggle: toggleFullscreen,
+  } = useFullscreen<HTMLDivElement>();
 
+  // Fit a 16:9 frame inside <main> on resize (letterbox/pillarbox) -> drives slide scale
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
@@ -122,14 +134,16 @@ export default function PresentationEditor({
       if (!isFullscreen && e.key !== "f" && e.key !== "F") return;
       if (e.key === "ArrowRight" || e.key === " ")
         setCurrent((c) => Math.min(c + 1, slides.length - 1));
-      else if (e.key === "ArrowLeft")
-        setCurrent((c) => Math.max(c - 1, 0));
+      else if (e.key === "ArrowLeft") setCurrent((c) => Math.max(c - 1, 0));
       else if (e.key === "f" || e.key === "F") toggleFullscreen();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [slides.length, isFullscreen, toggleFullscreen]);
 
+  {
+    /* If title, slide index order, new generate changes will call all of this function */
+  }
   useEffect(() => {
     if (generatingIds.size > 0) return;
     const initial = initialRef.current;
@@ -139,13 +153,16 @@ export default function PresentationEditor({
       slides.every(
         (s, i) =>
           s.html === initial.slides[i]?.html &&
-          s.thumbnailUrl === initial.slides[i]?.thumbnailUrl
+          s.thumbnailUrl === initial.slides[i]?.thumbnailUrl,
       );
     if (unchanged) return;
     const t = setTimeout(() => {
       savePresentation(presentationId, {
         title,
-        slides: slides.map((s) => ({ html: s.html, thumbnailUrl: s.thumbnailUrl })),
+        slides: slides.map((s) => ({
+          html: s.html,
+          thumbnailUrl: s.thumbnailUrl,
+        })),
       }).catch((err) => console.error("save failed", err));
     }, 1000);
     return () => clearTimeout(t);
@@ -162,14 +179,14 @@ export default function PresentationEditor({
   const generateThumbnail = async (
     slideId: string,
     html: string,
-    oldUrl?: string | null
+    oldUrl?: string | null,
   ) => {
     setGeneratingIds((prev) => new Set([...prev, slideId]));
     try {
       const url = await generateSlideThumbnail(presentationId, html, oldUrl);
       if (url) {
         setSlides((prev) =>
-          prev.map((s) => (s.id === slideId ? { ...s, thumbnailUrl: url } : s))
+          prev.map((s) => (s.id === slideId ? { ...s, thumbnailUrl: url } : s)),
         );
       }
     } catch {
@@ -207,7 +224,11 @@ export default function PresentationEditor({
       return;
     }
 
-    const newSlide: Slide = { id: uid(), html: result.html, thumbnailUrl: null };
+    const newSlide: Slide = {
+      id: uid(),
+      html: result.html,
+      thumbnailUrl: null,
+    };
     setSlides((s) => [...s, newSlide]);
     setCurrent(slides.length);
     setShowModal(false);
@@ -231,38 +252,62 @@ export default function PresentationEditor({
     generateThumbnail(copy.id, copy.html);
   };
 
+  const draftSlide = draftId ? slides.find((s) => s.id === draftId) : undefined;
+  const isDraftDirty =
+    draftSlide !== undefined && draftHtml !== draftSlide.html;
+
   const openEdit = (i: number) => {
     const s = slides[i];
     if (!s) return;
-    setEditOriginal(s.html);
+    setCurrent(i);
     setEditingId(s.id);
+    if (draftId !== s.id) {
+      // starting a different slide discards any old unsaved draft
+      setDraftId(s.id);
+      setDraftHtml(s.html);
+    }
+  };
+
+  const discardDraft = () => {
+    setDraftId(null);
+    setDraftHtml("");
+  };
+
+  const commitDraft = () => {
+    const slide = draftId ? slides.find((s) => s.id === draftId) : undefined;
+    if (!slide) return;
+    const html = draftHtml;
+    setSlides((arr) =>
+      arr.map((s) => (s.id === slide.id ? { ...s, html } : s)),
+    );
+    generateThumbnail(slide.id, html, slide.thumbnailUrl);
+    discardDraft();
+  };
+
+  // Sheet "Done": commit edits + regenerate thumbnail, close sheet
+  const saveEdit = () => {
+    commitDraft();
+    setEditingId(null);
+  };
+
+  // Sheet "Cancel": discard edits, close sheet
+  const cancelEdit = () => {
+    discardDraft();
+    setEditingId(null);
+  };
+
+  // Sheet closed via X / backdrop / Escape: keep a dirty draft (no thumbnail)
+  const closeEdit = () => {
+    setEditingId(null);
+    if (!isDraftDirty) discardDraft();
+  };
+
+  // Selecting another slide discards any unsaved draft
+  const selectSlide = (i: number) => {
+    const s = slides[i];
+    if (draftId && s && s.id !== draftId) discardDraft();
     setCurrent(i);
   };
-
-  const cancelEdit = () => {
-    if (!editingId) return;
-    setSlides((arr) =>
-      arr.map((s) => (s.id === editingId ? { ...s, html: editOriginal } : s)),
-    );
-    setEditingId(null);
-  };
-
-  const saveEdit = () => {
-    const slide = slides.find((s) => s.id === editingId);
-    if (slide) generateThumbnail(slide.id, slide.html, slide.thumbnailUrl);
-    setEditingId(null);
-  };
-
-  const updateEditingHtml = (html: string) => {
-    if (!editingId) return;
-    setSlides((arr) =>
-      arr.map((s) => (s.id === editingId ? { ...s, html } : s)),
-    );
-  };
-
-  const editingSlide = editingId
-    ? slides.find((s) => s.id === editingId)
-    : undefined;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -290,13 +335,17 @@ export default function PresentationEditor({
   };
 
   const currentSlide = slides[current];
+  const previewHtml =
+    currentSlide && draftId === currentSlide.id
+      ? draftHtml
+      : currentSlide?.html;
 
   return (
     <div
       ref={rootRef}
       className={cn(
         "relative flex flex-1 min-h-0 flex-col font-sans pt-[env(safe-area-inset-top)]",
-        isFullscreen ? "bg-black text-white" : "bg-muted text-foreground"
+        isFullscreen ? "bg-black text-white" : "bg-muted text-foreground",
       )}
     >
       <HeaderSlot>
@@ -324,16 +373,37 @@ export default function PresentationEditor({
       <main
         ref={mainRef}
         className={cn(
-          "flex-1 min-h-0 flex items-center justify-center bg-background/70",
-          isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8"
+          "relative flex-1 min-h-0 flex items-center justify-center bg-background/70",
+          isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8",
         )}
       >
+        {!isFullscreen &&
+          editingId === null &&
+          isDraftDirty &&
+          draftId === currentSlide?.id && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full border border-border bg-background/95 px-2 py-1.5 shadow-md backdrop-blur">
+              <span className="pl-2 text-xs text-muted-foreground">
+                Unsaved edits
+              </span>
+              <Button size="sm" onClick={commitDraft}>
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={discardDraft}
+                aria-label="Discard edits"
+              >
+                <IconX />
+              </Button>
+            </div>
+          )}
         <div
           className={cn(
             "overflow-hidden",
             isFullscreen
               ? "bg-black"
-              : "bg-card rounded-md border border-border shadow-sm"
+              : "bg-card rounded-md border border-border shadow-sm",
           )}
           style={{ width: frame.w, height: frame.h }}
         >
@@ -348,16 +418,14 @@ export default function PresentationEditor({
             >
               <iframe
                 key={currentSlide.id}
-                srcDoc={currentSlide.html}
+                srcDoc={previewHtml}
                 sandbox="allow-scripts allow-same-origin"
                 width={1920}
                 height={1080}
                 className="border-0 block"
                 title={`Slide ${current + 1}`}
               />
-              {isFullscreen && (
-                <div className="absolute inset-0" aria-hidden />
-              )}
+              {isFullscreen && <div className="absolute inset-0" aria-hidden />}
             </div>
           ) : (
             <button
@@ -375,12 +443,13 @@ export default function PresentationEditor({
       <footer
         className={cn(
           "shrink-0 bg-background border-t border-border px-4 pt-3 flex items-center gap-3",
-          isFullscreen && "hidden"
+          isFullscreen && "hidden",
         )}
         style={{
           paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
         }}
       >
+        {/*  Drag and Move the thumbnails and add button*/}
         <DndContext
           id="slide-thumb-strip"
           sensors={sensors}
@@ -406,7 +475,7 @@ export default function PresentationEditor({
                   index={i}
                   active={i === current}
                   isGenerating={generatingIds.has(s.id)}
-                  onSelect={() => setCurrent(i)}
+                  onSelect={() => selectSlide(i)}
                   onEdit={() => openEdit(i)}
                   onDuplicate={() => duplicateSlide(i)}
                   onDelete={() => setDeleteConfirmIdx(i)}
@@ -415,6 +484,8 @@ export default function PresentationEditor({
             </div>
           </SortableContext>
         </DndContext>
+
+        {/* Add Button */}
         <div className="flex shrink-0">
           <Button
             type="button"
@@ -427,32 +498,51 @@ export default function PresentationEditor({
         </div>
       </footer>
 
-      <Dialog open={showModal} onOpenChange={(open) => { if (!aiLoading) setShowModal(open); }}>
+      {/* Add Slide Dialog */}
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => {
+          if (!aiLoading) setShowModal(open);
+        }}
+      >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add slide</DialogTitle>
           </DialogHeader>
-          <Tabs value={addTab} onValueChange={(v) => setAddTab(v as "paste" | "ai")}>
+          <Tabs
+            value={addTab}
+            onValueChange={(v) => setAddTab(v as "paste" | "ai")}
+          >
             <TabsList className="w-full">
-              <TabsTrigger value="paste" className="flex-1">Paste HTML</TabsTrigger>
+              <TabsTrigger value="paste" className="flex-1">
+                Paste HTML
+              </TabsTrigger>
               <TabsTrigger value="ai" className="flex-1">
                 <IconSparkles className="size-4 mr-1.5" />
                 Generate with AI
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="paste" className="mt-4 flex flex-col gap-4 w-full">
+            <TabsContent
+              value="paste"
+              className="mt-4 flex flex-col gap-4 w-full"
+            >
               <Textarea
                 value={pasteHtml}
                 onChange={(e) => setPasteHtml(e.target.value)}
                 onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") confirmAdd();
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
+                    confirmAdd();
                 }}
                 className="min-h-50 max-h-64 w-full resize-none overflow-y-auto"
                 placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Hello</h1>\n  </body>\n</html>`}
               />
               <DialogFooter>
-                <Button size="sm" onClick={confirmAdd} disabled={!pasteHtml.trim() || aiLoading}>
+                <Button
+                  size="sm"
+                  onClick={confirmAdd}
+                  disabled={!pasteHtml.trim() || aiLoading}
+                >
                   Add slide
                 </Button>
               </DialogFooter>
@@ -467,17 +557,26 @@ export default function PresentationEditor({
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     onKeyDown={(e) => {
-                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleAiGenerate();
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
+                        handleAiGenerate();
                     }}
                     placeholder="e.g. A title slide for a startup pitch about an AI productivity app"
                     className="min-h-50  max-h-50 resize-none overflow-y-auto"
                   />
-                  {aiError && <p className="text-sm text-destructive">{aiError}</p>}
+                  {aiError && (
+                    <p className="text-sm text-destructive">{aiError}</p>
+                  )}
                 </>
               )}
               <DialogFooter className="flex flex-row items-center justify-end gap-2">
-                <span className="text-xs text-muted-foreground mr-auto">{credits} credits left</span>
-                <Button size="sm" onClick={handleAiGenerate} disabled={aiLoading || !aiPrompt.trim()}>
+                <span className="text-xs text-muted-foreground mr-auto">
+                  {credits} credits left
+                </span>
+                <Button
+                  size="sm"
+                  onClick={handleAiGenerate}
+                  disabled={aiLoading || !aiPrompt.trim()}
+                >
                   {aiLoading ? (
                     <>
                       <IconLoader2 className="size-4 mr-2 animate-spin" />
@@ -496,16 +595,27 @@ export default function PresentationEditor({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteConfirmIdx !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmIdx(null); }}>
+      {/* Confirm Delete Slide Dialog*/}
+      <Dialog
+        open={deleteConfirmIdx !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmIdx(null);
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Delete slide?</DialogTitle>
             <DialogDescription>
-              Slide {deleteConfirmIdx !== null ? deleteConfirmIdx + 1 : ""} will be permanently removed. This cannot be undone.
+              Slide {deleteConfirmIdx !== null ? deleteConfirmIdx + 1 : ""} will
+              be permanently removed. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirmIdx(null)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteConfirmIdx(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -522,10 +632,11 @@ export default function PresentationEditor({
         </DialogContent>
       </Dialog>
 
+      {/* Edit Slide Dialog */}
       <Sheet
         open={editingId !== null}
         onOpenChange={(open) => {
-          if (!open) cancelEdit();
+          if (!open) closeEdit();
         }}
       >
         <SheetContent
@@ -535,26 +646,34 @@ export default function PresentationEditor({
           <SheetHeader>
             <SheetTitle>Edit slide</SheetTitle>
           </SheetHeader>
+          {/* 
+           Edit Slides Area
+           Ctrl + Enter To Save the edited slides
+           ESC key for close the parent sheet
+          */}
           <Textarea
-            value={editingSlide?.html ?? ""}
-            onChange={(e) => updateEditingHtml(e.target.value)}
+            value={draftHtml}
+            onChange={(e) => setDraftHtml(e.target.value)}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") saveEdit();
-              if (e.key === "Escape") cancelEdit();
+              if (e.key === "Escape") closeEdit();
             }}
             className="flex-1 min-h-40 p-3 border-x-0 border-y border-border rounded-none shadow-none focus-visible:ring-0 focus-visible:border-border font-mono text-xs text-foreground resize-none"
           />
-          <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
-            <Button variant="ghost" size="sm" onClick={cancelEdit}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={saveEdit}>
-              Done
-            </Button>
-          </SheetFooter>
+          {isDraftDirty && (
+            <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
+              <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={saveEdit}>
+                Save
+              </Button>
+            </SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
 
+      {/* Full Screen Mode */}
       {isFullscreen && slides.length > 0 && (
         <PresentOverlay
           current={current}
@@ -611,14 +730,14 @@ function Thumb({
       className={cn(
         "flex items-center gap-1 shrink-0 rounded-sm transition-colors border-4",
         active ? "border-primary dark:border-primary/50" : "border-transparent",
-        isDragging && "opacity-50"
+        isDragging && "opacity-50",
       )}
     >
       <span
         {...listeners}
         className={cn(
           "text-[11px] tabular-nums font-medium w-4 text-right transition-colors cursor-grab active:cursor-grabbing select-none",
-          active ? "text-primary" : "text-muted-foreground"
+          active ? "text-primary" : "text-muted-foreground",
         )}
       >
         {index + 1}
@@ -628,7 +747,7 @@ function Thumb({
         onClick={onSelect}
         {...listeners}
         className={cn(
-          "relative group shrink-0 p-[5px] cursor-pointer transition-colors"
+          "relative group shrink-0 p-[5px] cursor-pointer transition-colors",
         )}
       >
         <div className="relative w-[128px] h-[72px] overflow-hidden bg-card">
@@ -652,7 +771,7 @@ function Thumb({
               title="Slide options"
               className={cn(
                 "absolute top-1 right-1 size-5 rounded-md bg-card/90 backdrop-blur-sm text-foreground hover:bg-card shadow-sm flex items-center justify-center transition-opacity outline-none data-[state=open]:opacity-100",
-                active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
               )}
             >
               <IconDots className="size-3" />
@@ -661,14 +780,14 @@ function Thumb({
               align="end"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onSelect={onDuplicate}>
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                 Delete
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onDuplicate}>
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
