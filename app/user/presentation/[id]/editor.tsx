@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowDownRight, IconDots, IconLoader2, IconMaximize } from "@tabler/icons-react";
+import {
+  IconArrowDownRight,
+  IconDots,
+  IconLoader2,
+  IconMaximize,
+  IconX,
+} from "@tabler/icons-react";
 import {
   DndContext,
   MouseSensor,
@@ -75,7 +81,8 @@ export default function PresentationEditor({
   const [showModal, setShowModal] = useState(false);
   const [pasteHtml, setPasteHtml] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editOriginal, setEditOriginal] = useState<string>("");
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftHtml, setDraftHtml] = useState<string>("");
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
@@ -197,38 +204,62 @@ export default function PresentationEditor({
     generateThumbnail(copy.id, copy.html);
   };
 
+  const draftSlide = draftId ? slides.find((s) => s.id === draftId) : undefined;
+  const isDraftDirty =
+    draftSlide !== undefined && draftHtml !== draftSlide.html;
+
   const openEdit = (i: number) => {
     const s = slides[i];
     if (!s) return;
-    setEditOriginal(s.html);
+    setCurrent(i);
     setEditingId(s.id);
+    if (draftId !== s.id) {
+      // starting a different slide discards any old unsaved draft
+      setDraftId(s.id);
+      setDraftHtml(s.html);
+    }
+  };
+
+  const discardDraft = () => {
+    setDraftId(null);
+    setDraftHtml("");
+  };
+
+  const commitDraft = () => {
+    const slide = draftId ? slides.find((s) => s.id === draftId) : undefined;
+    if (!slide) return;
+    const html = draftHtml;
+    setSlides((arr) =>
+      arr.map((s) => (s.id === slide.id ? { ...s, html } : s)),
+    );
+    generateThumbnail(slide.id, html, slide.thumbnailUrl);
+    discardDraft();
+  };
+
+  // Sheet "Done": commit edits + regenerate thumbnail, close sheet
+  const saveEdit = () => {
+    commitDraft();
+    setEditingId(null);
+  };
+
+  // Sheet "Cancel": discard edits, close sheet
+  const cancelEdit = () => {
+    discardDraft();
+    setEditingId(null);
+  };
+
+  // Sheet closed via X / backdrop / Escape: keep a dirty draft (no thumbnail)
+  const closeEdit = () => {
+    setEditingId(null);
+    if (!isDraftDirty) discardDraft();
+  };
+
+  // Selecting another slide discards any unsaved draft
+  const selectSlide = (i: number) => {
+    const s = slides[i];
+    if (draftId && s && s.id !== draftId) discardDraft();
     setCurrent(i);
   };
-
-  const cancelEdit = () => {
-    if (!editingId) return;
-    setSlides((arr) =>
-      arr.map((s) => (s.id === editingId ? { ...s, html: editOriginal } : s)),
-    );
-    setEditingId(null);
-  };
-
-  const saveEdit = () => {
-    const slide = slides.find((s) => s.id === editingId);
-    if (slide) generateThumbnail(slide.id, slide.html, slide.thumbnailUrl);
-    setEditingId(null);
-  };
-
-  const updateEditingHtml = (html: string) => {
-    if (!editingId) return;
-    setSlides((arr) =>
-      arr.map((s) => (s.id === editingId ? { ...s, html } : s)),
-    );
-  };
-
-  const editingSlide = editingId
-    ? slides.find((s) => s.id === editingId)
-    : undefined;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -256,6 +287,10 @@ export default function PresentationEditor({
   };
 
   const currentSlide = slides[current];
+  const previewHtml =
+    currentSlide && draftId === currentSlide.id
+      ? draftHtml
+      : currentSlide?.html;
 
   return (
     <div
@@ -290,10 +325,31 @@ export default function PresentationEditor({
       <main
         ref={mainRef}
         className={cn(
-          "flex-1 min-h-0 flex items-center justify-center bg-background/70",
+          "relative flex-1 min-h-0 flex items-center justify-center bg-background/70",
           isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8"
         )}
       >
+        {!isFullscreen &&
+          editingId === null &&
+          isDraftDirty &&
+          draftId === currentSlide?.id && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full border border-border bg-background/95 px-2 py-1.5 shadow-md backdrop-blur">
+              <span className="pl-2 text-xs text-muted-foreground">
+                Unsaved edits
+              </span>
+              <Button size="sm" onClick={commitDraft}>
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={discardDraft}
+                aria-label="Discard edits"
+              >
+                <IconX />
+              </Button>
+            </div>
+          )}
         <div
           className={cn(
             "overflow-hidden",
@@ -314,7 +370,7 @@ export default function PresentationEditor({
             >
               <iframe
                 key={currentSlide.id}
-                srcDoc={currentSlide.html}
+                srcDoc={previewHtml}
                 sandbox="allow-scripts allow-same-origin"
                 width={1920}
                 height={1080}
@@ -372,7 +428,7 @@ export default function PresentationEditor({
                   index={i}
                   active={i === current}
                   isGenerating={generatingIds.has(s.id)}
-                  onSelect={() => setCurrent(i)}
+                  onSelect={() => selectSlide(i)}
                   onEdit={() => openEdit(i)}
                   onDuplicate={() => duplicateSlide(i)}
                   onDelete={() => setDeleteConfirmIdx(i)}
@@ -458,7 +514,7 @@ export default function PresentationEditor({
       <Sheet
         open={editingId !== null}
         onOpenChange={(open) => {
-          if (!open) cancelEdit();
+          if (!open) closeEdit();
         }}
       >
         <SheetContent
@@ -469,22 +525,24 @@ export default function PresentationEditor({
             <SheetTitle>Edit slide</SheetTitle>
           </SheetHeader>
           <Textarea
-            value={editingSlide?.html ?? ""}
-            onChange={(e) => updateEditingHtml(e.target.value)}
+            value={draftHtml}
+            onChange={(e) => setDraftHtml(e.target.value)}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") saveEdit();
-              if (e.key === "Escape") cancelEdit();
+              if (e.key === "Escape") closeEdit();
             }}
             className="flex-1 min-h-40 p-3 border-x-0 border-y border-border rounded-none shadow-none focus-visible:ring-0 focus-visible:border-border font-mono text-xs text-foreground resize-none"
           />
-          <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
-            <Button variant="ghost" size="sm" onClick={cancelEdit}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={saveEdit}>
-              Done
-            </Button>
-          </SheetFooter>
+          {isDraftDirty && (
+            <SheetFooter className="flex-col-reverse sm:flex-row sm:justify-end">
+              <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={saveEdit}>
+                Save
+              </Button>
+            </SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
 
