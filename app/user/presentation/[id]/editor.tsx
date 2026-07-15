@@ -87,8 +87,11 @@ export default function PresentationEditor({
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
-  const { ref: rootRef, isFullscreen, toggle: toggleFullscreen } =
-    useFullscreen<HTMLDivElement>();
+  const {
+    ref: rootRef,
+    isFullscreen,
+    toggle: toggleFullscreen,
+  } = useFullscreen<HTMLDivElement>();
 
   useEffect(() => {
     const el = mainRef.current;
@@ -120,8 +123,7 @@ export default function PresentationEditor({
       if (!isFullscreen && e.key !== "f" && e.key !== "F") return;
       if (e.key === "ArrowRight" || e.key === " ")
         setCurrent((c) => Math.min(c + 1, slides.length - 1));
-      else if (e.key === "ArrowLeft")
-        setCurrent((c) => Math.max(c - 1, 0));
+      else if (e.key === "ArrowLeft") setCurrent((c) => Math.max(c - 1, 0));
       else if (e.key === "f" || e.key === "F") toggleFullscreen();
     };
     window.addEventListener("keydown", onKey);
@@ -137,13 +139,16 @@ export default function PresentationEditor({
       slides.every(
         (s, i) =>
           s.html === initial.slides[i]?.html &&
-          s.thumbnailUrl === initial.slides[i]?.thumbnailUrl
+          s.thumbnailUrl === initial.slides[i]?.thumbnailUrl,
       );
     if (unchanged) return;
     const t = setTimeout(() => {
       savePresentation(presentationId, {
         title,
-        slides: slides.map((s) => ({ html: s.html, thumbnailUrl: s.thumbnailUrl })),
+        slides: slides.map((s) => ({
+          html: s.html,
+          thumbnailUrl: s.thumbnailUrl,
+        })),
       }).catch((err) => console.error("save failed", err));
     }, 1000);
     return () => clearTimeout(t);
@@ -157,14 +162,14 @@ export default function PresentationEditor({
   const generateThumbnail = async (
     slideId: string,
     html: string,
-    oldUrl?: string | null
+    oldUrl?: string | null,
   ) => {
     setGeneratingIds((prev) => new Set([...prev, slideId]));
     try {
       const url = await generateSlideThumbnail(presentationId, html, oldUrl);
       if (url) {
         setSlides((prev) =>
-          prev.map((s) => (s.id === slideId ? { ...s, thumbnailUrl: url } : s))
+          prev.map((s) => (s.id === slideId ? { ...s, thumbnailUrl: url } : s)),
         );
       }
     } catch {
@@ -297,7 +302,7 @@ export default function PresentationEditor({
       ref={rootRef}
       className={cn(
         "relative flex flex-1 min-h-0 flex-col font-sans pt-[env(safe-area-inset-top)]",
-        isFullscreen ? "bg-black text-white" : "bg-muted text-foreground"
+        isFullscreen ? "bg-black text-white" : "bg-muted text-foreground",
       )}
     >
       <HeaderSlot>
@@ -326,7 +331,7 @@ export default function PresentationEditor({
         ref={mainRef}
         className={cn(
           "relative flex-1 min-h-0 flex items-center justify-center bg-background/70",
-          isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8"
+          isFullscreen ? "p-0" : "p-3 sm:p-4 md:p-6 lg:p-8",
         )}
       >
         {!isFullscreen &&
@@ -355,7 +360,7 @@ export default function PresentationEditor({
             "overflow-hidden",
             isFullscreen
               ? "bg-black"
-              : "bg-card rounded-md border border-border shadow-sm"
+              : "bg-card rounded-md border border-border shadow-sm",
           )}
           style={{ width: frame.w, height: frame.h }}
         >
@@ -377,9 +382,7 @@ export default function PresentationEditor({
                 className="border-0 block"
                 title={`Slide ${current + 1}`}
               />
-              {isFullscreen && (
-                <div className="absolute inset-0" aria-hidden />
-              )}
+              {isFullscreen && <div className="absolute inset-0" aria-hidden />}
             </div>
           ) : (
             <button
@@ -397,7 +400,7 @@ export default function PresentationEditor({
       <footer
         className={cn(
           "shrink-0 bg-background border-t border-border px-4 pt-3 flex items-center gap-3",
-          isFullscreen && "hidden"
+          isFullscreen && "hidden",
         )}
         style={{
           paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
@@ -474,27 +477,33 @@ export default function PresentationEditor({
             >
               Cancel
             </Button>
-            <Button
-              size="sm"
-              onClick={confirmAdd}
-              disabled={!pasteHtml.trim()}
-            >
+            <Button size="sm" onClick={confirmAdd} disabled={!pasteHtml.trim()}>
               Add slide
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteConfirmIdx !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmIdx(null); }}>
+      <Dialog
+        open={deleteConfirmIdx !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmIdx(null);
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Delete slide?</DialogTitle>
             <DialogDescription>
-              Slide {deleteConfirmIdx !== null ? deleteConfirmIdx + 1 : ""} will be permanently removed. This cannot be undone.
+              Slide {deleteConfirmIdx !== null ? deleteConfirmIdx + 1 : ""} will
+              be permanently removed. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirmIdx(null)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteConfirmIdx(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -602,14 +611,14 @@ function Thumb({
       className={cn(
         "flex items-center gap-1 shrink-0 rounded-sm transition-colors border-4",
         active ? "border-primary dark:border-primary/50" : "border-transparent",
-        isDragging && "opacity-50"
+        isDragging && "opacity-50",
       )}
     >
       <span
         {...listeners}
         className={cn(
           "text-[11px] tabular-nums font-medium w-4 text-right transition-colors cursor-grab active:cursor-grabbing select-none",
-          active ? "text-primary" : "text-muted-foreground"
+          active ? "text-primary" : "text-muted-foreground",
         )}
       >
         {index + 1}
@@ -619,7 +628,7 @@ function Thumb({
         onClick={onSelect}
         {...listeners}
         className={cn(
-          "relative group shrink-0 p-[5px] cursor-pointer transition-colors"
+          "relative group shrink-0 p-[5px] cursor-pointer transition-colors",
         )}
       >
         <div className="relative w-[128px] h-[72px] overflow-hidden bg-card">
@@ -643,7 +652,7 @@ function Thumb({
               title="Slide options"
               className={cn(
                 "absolute top-1 right-1 size-5 rounded-md bg-card/90 backdrop-blur-sm text-foreground hover:bg-card shadow-sm flex items-center justify-center transition-opacity outline-none data-[state=open]:opacity-100",
-                active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
               )}
             >
               <IconDots className="size-3" />
@@ -652,14 +661,14 @@ function Thumb({
               align="end"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onSelect={onDuplicate}>
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                 Delete
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onDuplicate}>
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
