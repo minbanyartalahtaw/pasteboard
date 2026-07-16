@@ -31,13 +31,13 @@ export default function PresentationGrid({
   return (
     <div className="flex-1 bg-background">
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div className="relative w-40 sm:w-64">
+        <div className="sticky top-0 z-10 -mx-6 mb-8 flex items-center justify-between gap-4 bg-background px-6 py-3">
+          <div className="relative w-full max-w-100 ">
             <IconSearch className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search presentations"
+              placeholder={`Search in ${presentations.length}00 ${presentations.length === 1 ? "presentation" : "presentations"}`}
               aria-label="Search presentations"
               className="pl-8 pr-8"
             />
