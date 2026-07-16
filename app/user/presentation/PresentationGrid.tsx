@@ -37,7 +37,7 @@ export default function PresentationGrid({
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Search in ${presentations.length}00 ${presentations.length === 1 ? "presentation" : "presentations"}`}
+              placeholder={`Search in ${presentations.length} ${presentations.length === 1 ? "presentation" : "presentations"}`}
               aria-label="Search presentations"
               className="pl-8 pr-8"
             />
