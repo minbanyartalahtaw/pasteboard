@@ -19,10 +19,12 @@ import { createPresentation } from "@/app/user/presentation/actions";
 
 type NewPresentationDialogProps = {
   triggerLabel?: string;
+  trigger?: React.ReactNode;
 };
 
 export default function NewPresentationDialog({
   triggerLabel = "",
+  trigger,
 }: NewPresentationDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -51,10 +53,12 @@ export default function NewPresentationDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <IconPlus />
-          {triggerLabel}
-        </Button>
+        {trigger ?? (
+          <Button>
+            <IconPlus />
+            {triggerLabel}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

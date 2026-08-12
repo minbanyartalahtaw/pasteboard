@@ -1,4 +1,4 @@
-import { IconLayoutDashboard } from "@tabler/icons-react"
+import { IconLayoutDashboard, IconPlus } from "@tabler/icons-react"
 
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -6,6 +6,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -17,6 +18,7 @@ import {
 import { SideBarNavLink } from "@/components/AppSideBarNav"
 import { PresentationSidebarItem } from "@/components/AppSideBarPresentationItem"
 import AppSideBarFooter from "@/components/AppSideBarFooter"
+import NewPresentationDialog from "@/app/user/presentation/NewPresentationDialog"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -98,6 +100,16 @@ export async function AppSideBar() {
 
         <SidebarGroup>
           <SidebarGroupLabel>Presentations</SidebarGroupLabel>
+          {session ? (
+            <NewPresentationDialog
+              trigger={
+                <SidebarGroupAction title="New presentation">
+                  <IconPlus />
+                  <span className="sr-only">New presentation</span>
+                </SidebarGroupAction>
+              }
+            />
+          ) : null}
           <SidebarGroupContent>
             <SidebarMenu>
               {presentations.length === 0 ? (
