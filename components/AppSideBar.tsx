@@ -1,4 +1,4 @@
-import { IconLayoutDashboard, IconPlus } from "@tabler/icons-react"
+import { IconLayoutDashboard } from "@tabler/icons-react"
 
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -6,7 +6,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -101,14 +100,7 @@ export async function AppSideBar() {
         <SidebarGroup>
           <SidebarGroupLabel>Presentations</SidebarGroupLabel>
           {session ? (
-            <NewPresentationDialog
-              trigger={
-                <SidebarGroupAction title="New presentation">
-                  <IconPlus />
-                  <span className="sr-only">New presentation</span>
-                </SidebarGroupAction>
-              }
-            />
+            <NewPresentationDialog triggerVariant="sidebar-action" />
           ) : null}
           <SidebarGroupContent>
             <SidebarMenu>

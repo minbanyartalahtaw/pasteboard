@@ -15,16 +15,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SidebarGroupAction } from "@/components/ui/sidebar";
 import { createPresentation } from "@/app/user/presentation/actions";
 
 type NewPresentationDialogProps = {
   triggerLabel?: string;
-  trigger?: React.ReactNode;
+  /**
+   * How to render the trigger. Kept as a plain string rather than a
+   * ReactNode prop: an element built in a Server Component arrives as a lazy
+   * reference during SSR, which Radix's Slot (`asChild`) cannot clone, so the
+   * trigger renders as null on the server and mismatches on hydration.
+   */
+  triggerVariant?: "button" | "sidebar-action";
 };
 
 export default function NewPresentationDialog({
   triggerLabel = "",
-  trigger,
+  triggerVariant = "button",
 }: NewPresentationDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -53,7 +60,12 @@ export default function NewPresentationDialog({
       }}
     >
       <DialogTrigger asChild>
-        {trigger ?? (
+        {triggerVariant === "sidebar-action" ? (
+          <SidebarGroupAction title="New presentation">
+            <IconPlus />
+            <span className="sr-only">New presentation</span>
+          </SidebarGroupAction>
+        ) : (
           <Button>
             <IconPlus />
             {triggerLabel}
