@@ -16,16 +16,21 @@ import { IconPencil, IconCheck, IconLoader2, IconX } from "@tabler/icons-react";
 import { updateProfile } from "./actions";
 
 function ThemeSelect() {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+
+  // Anyone still carrying a stored "system" preference from before this option
+  // was removed falls back to whatever that resolved to, so the select is never
+  // left showing an empty value.
+  const value = (theme === "system" ? resolvedTheme : theme) ?? "light";
+
   return (
-    <Select value={theme ?? "light"} onValueChange={setTheme}>
+    <Select value={value} onValueChange={setTheme}>
       <SelectTrigger className="w-32">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="light">Light</SelectItem>
         <SelectItem value="dark">Dark</SelectItem>
-        <SelectItem value="system">System</SelectItem>
       </SelectContent>
     </Select>
   );
