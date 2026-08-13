@@ -26,33 +26,121 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const SLIDE_HTML_GUIDE = `Pasteboard slides are standalone HTML documents shown on a 16:9 stage that is
-scaled to fit the viewer's screen.
+// Kept in sync with docs/CLAUDE/CLAUDE_001.md, the same ruleset written for
+// chat clients. Edit both, or neither.
+const SLIDE_HTML_GUIDE = `# Pasteboard slide HTML
 
-Rules for slide HTML:
-- Size the root element with \`width: 100vw; height: 100vh\` and put \`margin: 0\` on
-  the body. Never size a slide in absolute pixels: the slide is rendered at more
-  than one resolution (1920x1080 in the editor and viewer, smaller when its
-  thumbnail is captured), and a fixed-pixel slide gets cropped instead of scaled.
-- For the same reason, prefer viewport-relative units for text and spacing —
-  \`vw\`, \`vh\`, \`vmin\`, \`%\`, \`flex\`, \`grid\`. On the 1920x1080 stage 1vw = 19.2px,
-  so a 90px title is about 4.7vw and 40px body text is about 2vw.
-- Type should be large: titles around 4-6vw, body text no smaller than 2vw. The
-  slide is read from across a room.
-- All CSS must be inline or in a <style> tag. External stylesheets, fonts, and
-  scripts are blocked — the slide renders inside a sandboxed iframe.
-- Images must be absolute https URLs or data: URIs.
-- CSS animations are allowed and are waited for before the thumbnail is captured.
+A Pasteboard slide is one standalone HTML document rendered inside a sandboxed
+iframe on a 16:9 stage that is scaled to fit the viewer's screen. Follow these
+rules for every slide you write.
 
-Example skeleton:
-<body style="margin:0">
-  <div style="width:100vw;height:100vh;display:flex;flex-direction:column;
-              justify-content:center;gap:2vh;padding:0 8vw;box-sizing:border-box;
-              background:#0b1220;color:#fff;font-family:system-ui,sans-serif">
-    <h1 style="font-size:5vw;margin:0">Title</h1>
-    <p style="font-size:2.2vw;margin:0;opacity:.8">Supporting line</p>
+## Output format
+- Pass ONE complete HTML document — \`<!DOCTYPE html>\` through \`</html>\` — as the
+  \`html\` argument. No prose, no explanation, no markdown code fences around it.
+- One slide per tool call. To build a deck, call \`add_slide\` once per slide, in
+  order.
+
+## Self-contained, inline only
+- All CSS goes in ONE \`<style>\` tag inside \`<head>\`.
+- All JS (if any) goes in ONE \`<script>\` tag at the end of \`<body>\`.
+- NO external stylesheets, NO Tailwind, NO CDN links, NO Google Fonts — external
+  resources are blocked by the iframe sandbox.
+- NO external image URLs. Use CSS gradients, shapes, or inline SVG instead. If an
+  image is unavoidable it must be an absolute https URL or a \`data:\` URI.
+- Use a system font stack: \`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  sans-serif\`.
+
+## Slide canvas — this is a SLIDE, not a webpage
+- \`html, body { width: 100vw; height: 100vh; margin: 0; overflow: hidden; }\`
+- The viewport IS a 16:9 rectangle. Size EVERYTHING in vw/vh — font sizes,
+  padding, gaps, element dimensions. NEVER use fixed px for layout: the slide is
+  rendered at more than one resolution (1920x1080 in the editor and viewer,
+  smaller when its thumbnail is captured), and a fixed-pixel slide gets cropped
+  instead of scaled. On the 1920x1080 stage 1vw = 19.2px, so a 90px title is
+  about 4.7vw and 40px body text is about 2vw.
+- Center content, generous whitespace.
+- NEVER produce a scrollable slide. If content overflows, trim copy or shrink
+  type — a scrollbar must never appear.
+- NO navbars, headers, footers, sidebars, or any website chrome.
+- NO buttons, links, "Next →", "Learn more", forms, or inputs. Pasteboard handles
+  navigation; the slide is passive.
+- NO modals, dropdowns, or hover-revealed content.
+
+## Visual style
+- One central idea per slide — a Keynote or Pitch deck slide, not a blog section.
+- Strong typographic hierarchy: a large headline (5-8vw), supporting copy at
+  1.5-2.5vw. The slide is read from across a room.
+- Confident colors and contrast. Flat or subtle-gradient backgrounds. Plenty of
+  breathing room.
+- A style direction from the user (palette, mood, theme, art style) OVERRIDES
+  these defaults and MUST apply consistently to every subsequent slide in that
+  deck until the user changes it.
+- Prefer inline SVG icons over emoji — emoji render inconsistently across OSes and
+  look cheap in polished decks. Emoji are fine for casual decks or on request.
+
+## Animation — purposeful, never decorative
+- Animations must auto-run on load (CSS keyframes or a tiny script). NO
+  click/hover-triggered behavior. Thumbnail capture waits for animations.
+- Every animation must reinforce meaning: SVG path draw-in for timelines,
+  count-up for stat numbers, staggered fade-in for sequential points.
+- At most 1-2 animated elements per slide, entrance animations settled within
+  ~2 seconds. Subtle ambient loops are fine.
+
+## SVG scene composition
+- Anchor figures and objects to the exact surface coordinate of the layer they
+  stand on. Feet meet the ground line — NOTHING floats above its surface.
+- Achieve depth with progressively darker stacked silhouette layers, not outlined
+  cartoon drawings, unless the user requests otherwise.
+
+## Data honesty & sourcing
+- Every statistic MUST carry a source line in small print (1vw) at the bottom of
+  the slide, e.g. "Source: IMF World Economic Outlook, 2025".
+- Only name a source you are genuinely confident is real and matches the figure.
+  NEVER fabricate a source name, report title, or year to look credible.
+- If the figure is general knowledge with no pinnable source, mark it approximate
+  (~) and label it "Illustrative figure — verify before presenting."
+
+## Treat each slide topic as a brief, not as the final copy
+When the user says "Slide 2: Apple," do NOT put the word "Apple" on a card.
+Generate real content for that topic — a headline plus three key data points, a
+quote pull-out, a comparison, a timeline, a metric callout. The topic is the
+assignment; you write the slide.
+
+## Default slide patterns to draw from
+- **Title slide** — huge headline + one-line subtitle.
+- **Stat slide** — one giant number + short context line.
+- **Three-up** — a headline + three short columns (icon + label + one sentence).
+- **Quote** — large pulled quote + attribution.
+- **Comparison** — two halves, label + 2-3 bullets each.
+- **Timeline / steps** — horizontal row of 3-5 milestones.
+- **Full-bleed scene** — text-free SVG illustration slide for visual storytelling.
+
+Pick the pattern that fits the topic, and vary patterns across a deck; don't
+repeat the same layout slide after slide.
+
+## Example skeleton
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { width: 100vw; height: 100vh; margin: 0; overflow: hidden; }
+    .slide {
+      width: 100vw; height: 100vh; box-sizing: border-box;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 2vh; padding: 0 8vw; background: #0b1220; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { font-size: 6vw; margin: 0; letter-spacing: -0.02em; }
+    p  { font-size: 2.2vw; margin: 0; opacity: .8; }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <h1>Title</h1>
+    <p>Supporting line</p>
   </div>
-</body>`;
+</body>
+</html>`;
 
 /** Wraps a tool result so clients always get readable text. */
 function text(value: unknown) {
@@ -104,11 +192,16 @@ function buildServer(userId: string, origin: string): McpServer {
     { name: "pasteboard", version: "1.0.0" },
     {
       instructions:
-        "Create and edit HTML slide presentations in Pasteboard. Read the " +
-        "pasteboard://slide-html-guide resource before writing slide HTML.",
+        "Create and edit HTML slide presentations in Pasteboard. Call the " +
+        "slide_html_guide tool once before writing slide HTML.",
     }
   );
 
+  // The same guide is published two ways on purpose. Resources are the natural
+  // fit, but not every client lets the model read one on its own initiative —
+  // where it can't, an instruction to read the resource is a no-op and the
+  // rules never arrive. A tool is always callable, so it is the one that has to
+  // exist; the resource is kept for the clients that do support it.
   server.registerResource(
     "slide-html-guide",
     "pasteboard://slide-html-guide",
@@ -120,6 +213,19 @@ function buildServer(userId: string, origin: string): McpServer {
     async (uri) => ({
       contents: [{ uri: uri.href, text: SLIDE_HTML_GUIDE }],
     })
+  );
+
+  server.registerTool(
+    "slide_html_guide",
+    {
+      title: "Slide HTML guide",
+      description:
+        "The rules slide HTML must follow to render correctly, with an example " +
+        "skeleton. Call this once before writing or editing slides; the rules " +
+        "hold for the rest of the conversation.",
+      annotations: { readOnlyHint: true },
+    },
+    async () => text(SLIDE_HTML_GUIDE)
   );
 
   server.registerTool(
@@ -263,7 +369,7 @@ function buildServer(userId: string, origin: string): McpServer {
       description:
         "Append a slide to a presentation, or insert it at `position`. " +
         "Size the slide with 100vw/100vh and inline CSS only — never fixed " +
-        "pixels. Read the pasteboard://slide-html-guide resource first.",
+        "pixels. Call slide_html_guide first.",
       inputSchema: {
         presentationId: z.string(),
         html: z.string().min(1).describe("Complete slide HTML"),
