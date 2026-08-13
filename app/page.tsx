@@ -95,7 +95,7 @@ export default function Home() {
               See how it works →
             </a>
           </div>
-          <section id="workflow" className="border-t border-border py-20">
+          <section id="workflow" className=" py-20">
             <h2 className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Work Flow
             </h2>
