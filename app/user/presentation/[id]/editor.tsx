@@ -57,7 +57,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { savePresentation, generateSlideThumbnail } from "./actions";
 
-type Slide = { id: string; html: string; thumbnailUrl: string | null };
+type Slide = {
+  id: string;
+  html: string;
+  thumbnailUrl: string | null;
+  /** `Slide.updatedAt` when this row was last read from or written to the
+   *  database. Null for a slide that only exists in the browser so far. */
+  savedAt: string | null;
+};
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -87,6 +94,9 @@ export default function PresentationEditor({
   const mainRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const initialRef = useRef({ title: initialTitle, slides: initialSlides });
+  // Database ids the user deleted here. Only these get removed on save, so a
+  // slide added elsewhere since the page loaded survives.
+  const removedIdsRef = useRef<Set<string>>(new Set());
   const {
     ref: rootRef,
     isFullscreen,
@@ -143,13 +153,44 @@ export default function PresentationEditor({
       );
     if (unchanged) return;
     const t = setTimeout(() => {
+      const removedIds = [...removedIdsRef.current];
       savePresentation(presentationId, {
         title,
         slides: slides.map((s) => ({
+          key: s.id,
+          id: s.savedAt ? s.id : null,
           html: s.html,
           thumbnailUrl: s.thumbnailUrl,
+          savedAt: s.savedAt,
         })),
-      }).catch((err) => console.error("save failed", err));
+        removedIds,
+      })
+        .then((result) => {
+          if (!result.ok) {
+            console.error("save failed", result.error);
+            return;
+          }
+          removedIds.forEach((id) => removedIdsRef.current.delete(id));
+          // Adopt what was actually stored: real ids for new slides, and the
+          // stored copy of any slide edited elsewhere while this page was open.
+          const byKey = new Map(result.slides.map((s) => [s.key, s]));
+          setSlides((prev) => {
+            const next = prev.map((s) => {
+              const savedSlide = byKey.get(s.id);
+              return savedSlide
+                ? {
+                    id: savedSlide.id,
+                    html: savedSlide.html,
+                    thumbnailUrl: savedSlide.thumbnailUrl,
+                    savedAt: savedSlide.savedAt,
+                  }
+                : s;
+            });
+            initialRef.current = { title, slides: next };
+            return next;
+          });
+        })
+        .catch((err) => console.error("save failed", err));
     }, 1000);
     return () => clearTimeout(t);
   }, [title, slides, presentationId, generatingIds]);
@@ -186,7 +227,7 @@ export default function PresentationEditor({
   const confirmAdd = () => {
     const html = pasteHtml.trim();
     if (!html) return;
-    const newSlide = { id: uid(), html, thumbnailUrl: null };
+    const newSlide = { id: uid(), html, thumbnailUrl: null, savedAt: null };
     setSlides((s) => [...s, newSlide]);
     setCurrent(slides.length);
     setShowModal(false);
@@ -195,6 +236,8 @@ export default function PresentationEditor({
   };
 
   const deleteSlide = (i: number) => {
+    const removed = slides[i];
+    if (removed?.savedAt) removedIdsRef.current.add(removed.id);
     setSlides((s) => s.filter((_, idx) => idx !== i));
     setCurrent((c) => {
       const newLen = slides.length - 1;
@@ -203,7 +246,12 @@ export default function PresentationEditor({
   };
 
   const duplicateSlide = (i: number) => {
-    const copy = { id: uid(), html: slides[i].html, thumbnailUrl: null };
+    const copy = {
+      id: uid(),
+      html: slides[i].html,
+      thumbnailUrl: null,
+      savedAt: null,
+    };
     setSlides((s) => [...s.slice(0, i + 1), copy, ...s.slice(i + 1)]);
     setCurrent(i + 1);
     generateThumbnail(copy.id, copy.html);

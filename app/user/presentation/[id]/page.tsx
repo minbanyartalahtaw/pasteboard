@@ -35,6 +35,7 @@ export default async function PresentationPage({
         id: s.id,
         html: s.html,
         thumbnailUrl: s.thumbnailUrl ?? null,
+        savedAt: s.updatedAt.toISOString(),
       }))}
     />
   );

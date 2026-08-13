@@ -71,7 +71,14 @@ function failure(message: string) {
   return { ...text(message), isError: true };
 }
 
-/** Regenerates a slide thumbnail after the response is sent. */
+/**
+ * Regenerates a slide thumbnail after the response is sent.
+ *
+ * The caller has already revalidated for the HTML change, but that happens
+ * seconds before the screenshot finishes, so it would cache the *old* thumbnail
+ * alongside the new markup. Revalidating again here is what actually gets the
+ * new image on screen.
+ */
 function queueThumbnail(
   presentationId: string,
   slideId: string,
@@ -81,9 +88,13 @@ function queueThumbnail(
   after(async () => {
     try {
       const url = await renderThumbnail(presentationId, html, oldUrl);
-      if (url) await setSlideThumbnail(slideId, url);
-    } catch {
-      // A missing thumbnail is cosmetic; the slide itself is already saved.
+      if (!url) return;
+      await setSlideThumbnail(slideId, url);
+      revalidatePath("/user/presentation", "layout");
+    } catch (error) {
+      // A missing thumbnail is cosmetic; the slide itself is already saved. Log
+      // it though — silent failure here is indistinguishable from a stale cache.
+      console.error("thumbnail generation failed", error);
     }
   });
 }
