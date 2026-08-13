@@ -1,10 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useTransition } from "react";
-import { IconCheck, IconCopy, IconLoader2, IconTrash } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconLoader2,
+  IconPlugConnected,
+  IconTrash,
+} from "@tabler/icons-react";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { disconnectApp } from "./actions";
 
 type AppRow = {
@@ -21,6 +33,7 @@ function CopyButton({ value, label }: { value: string; label?: string }) {
     <Button
       size="sm"
       variant="ghost"
+      className="shrink-0 text-muted-foreground hover:text-foreground"
       onClick={() => {
         navigator.clipboard.writeText(value);
         setCopied(true);
@@ -35,6 +48,36 @@ function CopyButton({ value, label }: { value: string; label?: string }) {
       {label ? <span className="ml-1">{copied ? "Copied" : label}</span> : null}
     </Button>
   );
+}
+
+/**
+ * A monospace value with a copy button, used for the endpoint and commands.
+ * Long values scroll rather than truncate, so nothing is permanently hidden.
+ */
+function CodeBlock({ value }: { value: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border bg-muted/40 py-1.5 pl-3 pr-1.5">
+      <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-xs text-foreground">
+        {value}
+      </code>
+      <CopyButton value={value} />
+    </div>
+  );
+}
+
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-medium text-muted-foreground">
+        {n}
+      </span>
+      <span className="text-sm text-muted-foreground">{children}</span>
+    </li>
+  );
+}
+
+function Ui({ children }: { children: React.ReactNode }) {
+  return <span className="font-medium text-foreground">{children}</span>;
 }
 
 export default function McpSettings({
@@ -55,32 +98,8 @@ export default function McpSettings({
     });
   };
 
-  const claudeCodeCommand = `claude mcp add --transport http pasteboard ${endpoint}`;
-
   return (
     <div className="flex flex-col">
-      <div className="py-4">
-        <h2 className="text-sm font-medium">MCP server</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Connect Pasteboard to any chatbot that speaks MCP, and let it build
-          slides for you. You sign in with this account — no keys to copy.
-        </p>
-      </div>
-
-      <Separator />
-
-      <div className="flex items-center justify-between gap-4 py-4">
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-sm font-medium">Endpoint</span>
-          <code className="text-xs text-muted-foreground truncate">
-            {endpoint}
-          </code>
-        </div>
-        <CopyButton value={endpoint} />
-      </div>
-
-      <Separator />
-
       <div className="py-4">
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-medium">Connected apps</span>
@@ -89,73 +108,109 @@ export default function McpSettings({
           </span>
         </div>
 
-        <div className="flex flex-col mt-3">
-          {apps.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-3">
-              Nothing connected yet.
-            </p>
-          ) : (
-            apps.map((app) => (
+        {apps.length === 0 ? (
+          <div className="mt-3 flex flex-col items-center gap-1 rounded-lg border border-dashed px-4 py-8 text-center">
+            <IconPlugConnected className="size-5 text-muted-foreground" />
+            <span className="text-sm font-medium">No apps connected</span>
+            <span className="text-sm text-muted-foreground">
+              Follow the steps below to connect Claude.
+            </span>
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-col rounded-lg border">
+            {apps.map((app) => (
               <div
                 key={app.clientId}
-                className="flex items-center justify-between gap-4 py-2.5 border-b last:border-b-0"
+                className="flex items-center justify-between gap-3 px-3 py-2.5 not-last:border-b"
               >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-sm truncate">{app.name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    Connected {new Date(app.connectedAt).toLocaleDateString()}
-                    {app.clientUri ? ` · ${new URL(app.clientUri).host}` : ""}
-                  </span>
+                <div className="flex min-w-0 items-center gap-3">
+                  <Image
+                    src="/claude.webp"
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="size-8 shrink-0 rounded-md border object-cover"
+                  />
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="truncate text-sm font-medium">
+                      {app.name}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      Connected{" "}
+                      {new Date(app.connectedAt).toLocaleDateString()}
+                      {app.lastUsedAt
+                        ? ` · used ${new Date(app.lastUsedAt).toLocaleDateString()}`
+                        : " · never used"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-muted-foreground hidden sm:inline">
-                    {app.lastUsedAt
-                      ? `Used ${new Date(app.lastUsedAt).toLocaleDateString()}`
-                      : "Never used"}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-destructive"
-                    disabled={pending}
-                    onClick={() => handleDisconnect(app.clientId)}
-                  >
-                    {disconnectingId === app.clientId ? (
-                      <IconLoader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <IconTrash className="size-3.5" />
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  disabled={pending}
+                  onClick={() => handleDisconnect(app.clientId)}
+                >
+                  {disconnectingId === app.clientId ? (
+                    <IconLoader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <IconTrash className="size-3.5" />
+                  )}
+                </Button>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <Separator />
+      <div className="py-4">
+        <Accordion type="single" collapsible>
+          <AccordionItem value="claude-web">
+            <AccordionTrigger>Connect to Claude web and desktop</AccordionTrigger>
+            <AccordionContent>
+              <ol className="flex flex-col gap-2.5">
+                <Step n={1}>
+                  Open <Ui>Settings → Connectors</Ui> in Claude.
+                </Step>
+                <Step n={2}>
+                  Click <Ui>Add custom connector</Ui> and paste this address:
+                </Step>
+                <li className="ml-8">
+                  <CodeBlock value={endpoint} />
+                </li>
+                <Step n={3}>
+                  Click <Ui>Connect</Ui>. Claude sends you back here to approve
+                  the request.
+                </Step>
+                <Step n={4}>
+                  In any chat, open the <Ui>+</Ui> menu and enable{" "}
+                  <Ui>Pasteboard</Ui>.
+                </Step>
+              </ol>
+            </AccordionContent>
+          </AccordionItem>
 
-      <div className="py-4 flex flex-col gap-3">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Connect the Claude website</span>
-          <p className="text-sm text-muted-foreground">
-            Go to <span className="text-foreground">Customize → Connectors</span>{" "}
-            → <span className="text-foreground">Add custom connector</span>, paste
-            the endpoint above, and click Connect. Claude will send you here to
-            approve the request.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Connect Claude Code</span>
-          <pre className="text-xs bg-muted rounded-md p-3 overflow-x-auto">
-            {claudeCodeCommand}
-          </pre>
-          <p className="text-xs text-muted-foreground">
-            Then run <code>/mcp</code> and choose Authenticate. Cursor and VS
-            Code take the same URL in their MCP config.
-          </p>
-        </div>
+          <AccordionItem value="claude-code">
+            <AccordionTrigger>Connect to Claude Code</AccordionTrigger>
+            <AccordionContent>
+              <ol className="flex flex-col gap-2.5">
+                <Step n={1}>Run this in your terminal:</Step>
+                <li className="ml-8">
+                  <CodeBlock
+                    value={`claude mcp add --transport http pasteboard ${endpoint}`}
+                  />
+                </li>
+                <Step n={2}>
+                  Run <Ui>/mcp</Ui>, pick <Ui>pasteboard</Ui>, then{" "}
+                  <Ui>Authenticate</Ui>.
+                </Step>
+                <Step n={3}>
+                  Approve the request in the browser tab that opens.
+                </Step>
+              </ol>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
