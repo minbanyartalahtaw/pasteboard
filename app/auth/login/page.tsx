@@ -1,11 +1,17 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, safeNext } from "@/lib/auth";
 import LoginForm from "./LoginForm";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (session) {
-    redirect("/user/presentation");
+    // Honour `next` here too: the OAuth consent flow sends users through this
+    // page, and an existing session must not swallow the destination.
+    redirect(safeNext((await searchParams).next));
   }
 
   return (

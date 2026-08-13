@@ -31,3 +31,15 @@ export async function getSession(): Promise<SessionPayload | null> {
   const token = (await cookies()).get("token")?.value;
   return token ? await verifyToken(token) : null;
 }
+
+/**
+ * Sanitises a `next` redirect target. Only same-origin relative paths pass, so
+ * a crafted link cannot bounce a freshly signed-in user off-site.
+ */
+export function safeNext(
+  value: unknown,
+  fallback = "/user/presentation"
+): string {
+  const next = typeof value === "string" ? value : "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+}

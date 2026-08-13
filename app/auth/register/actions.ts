@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { signToken } from "@/lib/auth";
+import { safeNext, signToken } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 
 export type RegisterState = { error?: string } | null;
@@ -17,11 +17,7 @@ export async function register(
     .toLowerCase();
   const name = String(formData.get("name") ?? "").trim() || null;
   const password = String(formData.get("password") ?? "");
-  const nextRaw = String(formData.get("next") ?? "");
-  const next =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//")
-      ? nextRaw
-      : "/user/presentation";
+  const next = safeNext(formData.get("next"));
 
   if (!email || !password) {
     return { error: "Email and password are required." };

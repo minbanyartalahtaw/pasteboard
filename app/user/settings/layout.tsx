@@ -8,6 +8,7 @@ import { SettingsHeader } from "./SettingHeader";
 const navItems = [
   { label: "General", href: "/user/settings/general" },
   { label: "Password", href: "/user/settings/password" },
+  { label: "MCP", href: "/user/settings/mcp" },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

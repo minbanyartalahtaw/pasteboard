@@ -21,6 +21,66 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   presentations Presentation[]
+  oauthCodes    OAuthCode[]
+  oauthTokens   OAuthToken[]
+}
+
+// An OAuth 2.1 client, created by dynamic client registration (RFC 7591) when a
+// chatbot first discovers the MCP endpoint. Public clients (PKCE only) have no
+// secret; confidential ones store the SHA-256 hash of theirs.
+model OAuthClient {
+  id              String       @id @default(cuid())
+  name            String       @default("Unnamed app")
+  secretHash      String?
+  redirectUris    String[]
+  grantTypes      String[]
+  tokenAuthMethod String       @default("none")
+  clientUri       String?
+  logoUri         String?
+  createdAt       DateTime     @default(now())
+  codes           OAuthCode[]
+  tokens          OAuthToken[]
+}
+
+// A short-lived authorization code. Single-use: the row is deleted the moment it
+// is exchanged, so a replayed code cannot mint a second token.
+model OAuthCode {
+  id                  String      @id @default(cuid())
+  hash                String      @unique
+  clientId            String
+  client              OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redirectUri         String
+  codeChallenge       String
+  codeChallengeMethod String      @default("S256")
+  scope               String      @default("mcp")
+  resource            String?
+  expiresAt           DateTime
+  createdAt           DateTime    @default(now())
+
+  @@index([expiresAt])
+}
+
+// An issued access token and its refresh token. Both are stored as SHA-256
+// hashes only, matching ApiKey.
+model OAuthToken {
+  id               String      @id @default(cuid())
+  accessHash       String      @unique
+  refreshHash      String?     @unique
+  clientId         String
+  client           OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope            String      @default("mcp")
+  resource         String?
+  expiresAt        DateTime
+  lastUsedAt       DateTime?
+  createdAt        DateTime    @default(now())
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([expiresAt])
 }
 
 model Presentation {

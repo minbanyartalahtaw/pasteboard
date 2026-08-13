@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { list, del } from "@vercel/blob";
+import {
+  createPresentationFor,
+  deletePresentationFor,
+  setPresentationPublicFor,
+} from "@/lib/presentations";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -12,37 +15,20 @@ export async function createPresentation(
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Unauthorized" };
-  const trimmed = title.trim();
-  if (!trimmed) return { ok: false, error: "Title required" };
 
-  const presentation = await prisma.presentation.create({
-    data: { userId: session.userId, title: trimmed },
-    select: { id: true },
-  });
+  const created = await createPresentationFor(session.userId, title);
+  if (!created) return { ok: false, error: "Title required" };
+
   revalidatePath("/user/presentation", "layout");
-  return { ok: true, id: presentation.id };
-}
-
-async function ownsPresentation(id: string): Promise<string | null> {
-  const session = await getSession();
-  if (!session) return null;
-  const p = await prisma.presentation.findFirst({
-    where: { id, userId: session.userId },
-    select: { id: true },
-  });
-  return p ? session.userId : null;
+  return { ok: true, id: created.id };
 }
 
 export async function deletePresentation(id: string): Promise<Result> {
-  const ok = await ownsPresentation(id);
-  if (!ok) return { ok: false, error: "Not found" };
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Unauthorized" };
 
-  await prisma.presentation.delete({ where: { id } });
-
-  const { blobs } = await list({ prefix: `slides/${id}/` });
-  if (blobs.length > 0) {
-    await Promise.allSettled(blobs.map((b) => del(b.url)));
-  }
+  if (!(await deletePresentationFor(session.userId, id)))
+    return { ok: false, error: "Not found" };
 
   revalidatePath("/user/presentation", "layout");
   return { ok: true };
@@ -52,13 +38,12 @@ export async function setPresentationPublic(
   id: string,
   isPublic: boolean
 ): Promise<Result> {
-  const ok = await ownsPresentation(id);
-  if (!ok) return { ok: false, error: "Not found" };
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Unauthorized" };
 
-  await prisma.presentation.update({
-    where: { id },
-    data: { isPublic },
-  });
+  if (!(await setPresentationPublicFor(session.userId, id, isPublic)))
+    return { ok: false, error: "Not found" };
+
   revalidatePath("/user/presentation", "layout");
   return { ok: true };
 }
